@@ -25,7 +25,7 @@ function Courses({ currentUser, setActiveTab }) {
     }
 
     // Access allowed (authLevel >= 1)
-    setToastMessage('جاري فتح محاضرات سنة أولى...');
+    setActiveTab('year1');
   };
 
   const handleYear2Click = () => {
@@ -41,8 +41,7 @@ function Courses({ currentUser, setActiveTab }) {
     }
 
     // Access allowed (authLevel >= 2)
-    // Replace with actual logic to show Year 2 courses
-    setToastMessage('جاري فتح محاضرات سنة تانية...');
+    setActiveTab('year2');
   };
 
   return (

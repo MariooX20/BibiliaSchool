@@ -1,4 +1,5 @@
 import { BookOpen, Moon, Sliders, Sun, Menu, X, User, LogOut, Settings } from 'lucide-react'
+import { UserRound } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react'
 import SignUpModal from '../auth/SignUpModal'
 
@@ -37,13 +38,11 @@ function Header({
         <div className="max-w-6xl mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-gold-600 to-amber-400 flex items-center justify-center text-deep-950 shadow-lg glow-gold">
-              <BookOpen size={22} className="stroke-[2.5]" />
-            </div>
+            <img src="/icon.png" alt="Bibilia School Logo" className="w-auto h-20 scale-125 object-contain drop-shadow-md origin-left" />
             <div>
-              <h1 className="font-bold text-lg md:text-xl tracking-tight leading-none bg-gradient-to-l from-gold-400 to-amber-500 bg-clip-text text-transparent">
+              {/* <h1 className="font-bold text-lg md:text-xl tracking-tight leading-none bg-gradient-to-l from-gold-400 to-amber-500 bg-clip-text text-transparent">
                Bibilia School
-              </h1>
+              </h1> */}
             </div>
           </div>
 
@@ -87,7 +86,7 @@ function Header({
                       <img src={currentUser.photoURL} alt={currentUser.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-tr from-gold-600 to-amber-400 flex items-center justify-center text-white font-bold">
-                        {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : <User size={20} />}
+                        {currentUser.name ? <UserRound /> : <User size={20} />}
                       </div>
                     )}
                   </button>

@@ -28,6 +28,10 @@ import Header from './components/header/Header'
 import Footer from './components/footer/Footer'
 import Home from './components/home/Home'
 import Courses from './components/courses/Courses'
+import Year1 from './components/courses/Year1Section/Year1'
+import Year1OldTestament from './components/courses/Year1Section/3ahdAdem'
+import Year1NewTestament from './components/courses/Year1Section/3ahdGded'
+import Year2 from './components/courses/Year2'
 import Lesson from './components/lesson/Lesson'
 import Settings from './components/settings/Settings'
 import Login from './components/auth/Login'
@@ -340,6 +344,26 @@ function App() {
         {/* TAB 2: COURSES CATALOG */}
         {activeTab === 'courses' && (
           <Courses currentUser={currentUser} setActiveTab={setActiveTab} />
+        )}
+
+        {/* YEAR 1 PAGE */}
+        {activeTab === 'year1' && (
+          <Year1 setActiveTab={setActiveTab} />
+        )}
+
+        {/* YEAR 1 OLD TESTAMENT PAGE */}
+        {activeTab === 'year1_old' && (
+          <Year1OldTestament setActiveTab={setActiveTab} />
+        )}
+
+        {/* YEAR 1 NEW TESTAMENT PAGE */}
+        {activeTab === 'year1_new' && (
+          <Year1NewTestament setActiveTab={setActiveTab} />
+        )}
+
+        {/* YEAR 2 PAGE */}
+        {activeTab === 'year2' && (
+          <Year2 setActiveTab={setActiveTab} />
         )}
 
         {/* TAB 3: LESSON PLAYER */}
