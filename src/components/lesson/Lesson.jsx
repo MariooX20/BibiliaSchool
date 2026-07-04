@@ -1,7 +1,7 @@
 function Lesson() {
   return (
     <div className="animate-fade-in text-right">
-      Hi
+      Under Construction
     </div>
   );
 }

@@ -10,7 +10,8 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
     birthDate: '',
     father: '',
     grade: '',
-    gender: ''
+    gender: '',
+    service: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -27,7 +28,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
     setIsLoading(true);
     setError('');
 
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbycz2BfHyPMl4mkWS2KvoBY6a61tCgmbYG-VHxJjR7EyQGR049bmOhNrUaTXar-D5oT/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyf8HK2lWQJAqmYLjoWiwiZElhVv5eElITiVjn3Jp9lfeaRQ67ZD-qodqfXU4nJdA-O/exec';
     
     const url = new URL(scriptURL);
     url.searchParams.append('name', formData.name);
@@ -37,6 +38,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
     url.searchParams.append('father', formData.father);
     url.searchParams.append('grade', formData.grade);
     url.searchParams.append('gender', formData.gender);
+    url.searchParams.append('service', formData.service);
     // Also add capitalized versions just in case the script expects them
     url.searchParams.append('Name', formData.name);
     url.searchParams.append('Email', formData.email);
@@ -53,7 +55,8 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
             father: formData.father,
             grade: formData.grade,
             gender: formData.gender,
-            birthDate: formData.birthDate
+            birthDate: formData.birthDate,
+            service: formData.service
           }
         }
       });
@@ -74,7 +77,8 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
               father: formData.father,
               grade: formData.grade,
               gender: formData.gender,
-              birth_date: formData.birthDate
+              birth_date: formData.birthDate,
+              service: formData.service
             }
           ]);
           
@@ -83,18 +87,17 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
         }
       }
 
-      // 3. Backup to Google Script
-      // Using no-cors because Google Scripts typically redirect and cause CORS errors if not configured to handle preflight
-      await fetch(url, {
+      // 3. Backup to Google Script (Run in background without await to speed up UI)
+      fetch(url, {
         method: 'GET',
         mode: 'no-cors'
-      });
+      }).catch(err => console.error('Google Script Backup Error:', err));
       
       setIsSuccess(true);
       setTimeout(() => {
         onClose();
         setIsSuccess(false);
-        setFormData({ name: '', email: '', password: '', birthDate: '', father: '', grade: '', gender: '' });
+        setFormData({ name: '', email: '', password: '', birthDate: '', father: '', grade: '', gender: '', service: '' });
       }, 2000);
     } catch (err) {
       console.error('Error submitting form:', err);
@@ -114,7 +117,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${overlayBg} backdrop-blur-sm transition-opacity`}>
       <div 
-        className={`relative w-full max-w-md max-h-[90vh] overflow-y-auto p-6 sm:p-8 rounded-2xl border shadow-2xl animate-fade-in ${modalBg} ${textPrimary}`}
+        className={`relative w-full max-w-xl max-h-[90vh] overflow-y-auto no-scrollbar p-6 sm:p-8 rounded-2xl border shadow-2xl animate-fade-in ${modalBg} ${textPrimary}`}
         dir="rtl"
       >
         <button 
@@ -188,6 +191,19 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
                 onChange={handleChange}
                 required
                 placeholder="أدخل اسم أب الاعتراف"
+                className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${inputBg}`}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1.5 opacity-90">اسم الخدمة اللي بتحضر فيها</label>
+              <input 
+                type="text" 
+                name="service"
+                value={formData.service}
+                onChange={handleChange}
+                required
+                placeholder="أدخل اسم الخدمة"
                 className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${inputBg}`}
               />
             </div>
