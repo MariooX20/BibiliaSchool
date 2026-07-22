@@ -141,7 +141,7 @@ function Home({
       <div className="space-y-10 animate-fade-in text-right">
         {/* Hero Section */}
         <div
-          className={`relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 shadow-2xl bg-cover bg-center bg-no-repeat ${
+          className={`relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 shadow-2xl bg-contain md:bg-cover bg-center bg-no-repeat bg-[#0d1627] ${
             themeMode === "dark"
               ? "border-deep-700/50"
               : themeMode === "sepia"
@@ -157,7 +157,7 @@ function Home({
             <div className="lg:col-span-7 space-y-8 text-right animate-slide-up relative z-20">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold bg-white/10 text-white border border-white/20 backdrop-blur-md">
                 <Sparkles size={16} className="animate-pulse text-gold-400" />
-                <span> Bibilia School</span>
+                <span> Biblia School</span>
               </div>
 
               <h2 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.2] drop-shadow-lg">
