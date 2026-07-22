@@ -1,6 +1,8 @@
 import { ChevronRight, PlayCircle, BookOpen, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-function Year1NewTestament({ setActiveTab }) {
+function Year1NewTestament() {
+  const navigate = useNavigate();
   // Placeholder data for lessons
   const lessons = [
     { id: 1, title: "مقدمة في العهد الجديد", duration: "40 دقيقة", type: "فيديو" },
@@ -14,7 +16,7 @@ function Year1NewTestament({ setActiveTab }) {
       {/* Header Section */}
       <div className="flex items-center gap-4 mb-8">
         <button 
-          onClick={() => setActiveTab('year1')}
+          onClick={() => navigate('/year1')}
           className="p-2 rounded-xl bg-stone-200 dark:bg-deep-800 text-stone-700 dark:text-stone-300 hover:bg-stone-300 dark:hover:bg-deep-700 transition-colors"
         >
           <ChevronRight size={24} />

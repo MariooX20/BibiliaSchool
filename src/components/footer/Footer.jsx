@@ -1,11 +1,14 @@
-function Footer({ themeMode, setActiveTab }) {
+function Footer({ themeMode }) {
   return (
- <footer className="footer sm:footer-horizontal bg-neutral text-neutral-content items-center p-4 mt-auto">
-  <aside className="grid-flow-col items-center">
-   
-    <p>مدرسة الكتاب المقدس {new Date().getFullYear()} - كنيسة العذراء مريم بالعمرانية</p>
-  </aside>
-  <nav className="gap-4 md:place-self-center md:justify-self-end flex flex-row">
+    <footer className={`flex flex-col sm:flex-row justify-between items-center p-6 mt-auto border-t transition-colors duration-300 ${
+      themeMode === 'dark' ? 'bg-deep-950 border-deep-900 text-gray-400' : 
+      themeMode === 'sepia' ? 'bg-[#efe9d0] border-[#dfd5b4] text-[#8c7e5a]' : 
+      'bg-stone-50 border-stone-200 text-stone-500'
+    }`}>
+      <div className="flex items-center mb-4 sm:mb-0">
+        <p className="text-sm font-medium">مدرسة الكتاب المقدس {new Date().getFullYear()} - كنيسة العذراء مريم بالعمرانية</p>
+      </div>
+      <nav className="flex items-center gap-6">
     <a href="https://www.facebook.com/profile.php?id=61580414158452" target="_blank"  className="hover:text-gold-500 transition-colors">
       <svg
         xmlns="http://www.w3.org/2000/svg"

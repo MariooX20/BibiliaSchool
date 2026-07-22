@@ -1,6 +1,8 @@
 import { ChevronRight, PlayCircle, BookOpen, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-function Year2({ setActiveTab }) {
+function Year2() {
+  const navigate = useNavigate();
   // Placeholder data for lessons
   const lessons = [
     { id: 1, title: "مقدمة في العهد الجديد", duration: "40 دقيقة", type: "فيديو" },
@@ -14,7 +16,7 @@ function Year2({ setActiveTab }) {
       {/* Header Section */}
       <div className="flex items-center gap-4 mb-8">
         <button 
-          onClick={() => setActiveTab('courses')}
+          onClick={() => navigate('/courses')}
           className="p-2 rounded-xl bg-stone-200 dark:bg-deep-800 text-stone-700 dark:text-stone-300 hover:bg-stone-300 dark:hover:bg-deep-700 transition-colors"
         >
           <ChevronRight size={24} />
@@ -37,7 +39,7 @@ function Year2({ setActiveTab }) {
 
         {/* Lessons List Placeholder */}
         <div className="flex flex-col gap-4">
-          {lessons.map((lesson, index) => (
+          {lessons.map((lesson) => (
             <div 
               key={lesson.id} 
               className="flex items-center justify-between p-5 rounded-2xl border border-stone-200 dark:border-stone-800 bg-white/50 dark:bg-deep-900/50 backdrop-blur-sm hover:shadow-md transition-shadow group cursor-pointer"

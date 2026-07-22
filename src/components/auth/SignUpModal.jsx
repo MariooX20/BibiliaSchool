@@ -6,12 +6,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
-    birthDate: '',
-    father: '',
-    grade: '',
-    gender: '',
-    service: ''
+    password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -28,17 +23,12 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
     setIsLoading(true);
     setError('');
 
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyf8HK2lWQJAqmYLjoWiwiZElhVv5eElITiVjn3Jp9lfeaRQ67ZD-qodqfXU4nJdA-O/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwiBZCpEcsS9tW40zuddZuW6rYskc2R2JpZxZ4xluK4TGSqkBf6lPQOJy6XiGVNNRQq/exec';
     
     const url = new URL(scriptURL);
     url.searchParams.append('name', formData.name);
     url.searchParams.append('email', formData.email);
     url.searchParams.append('password', formData.password);
-    url.searchParams.append('birthDate', formData.birthDate);
-    url.searchParams.append('father', formData.father);
-    url.searchParams.append('grade', formData.grade);
-    url.searchParams.append('gender', formData.gender);
-    url.searchParams.append('service', formData.service);
     // Also add capitalized versions just in case the script expects them
     url.searchParams.append('Name', formData.name);
     url.searchParams.append('Email', formData.email);
@@ -51,12 +41,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
         password: formData.password,
         options: {
           data: {
-            name: formData.name,
-            father: formData.father,
-            grade: formData.grade,
-            gender: formData.gender,
-            birthDate: formData.birthDate,
-            service: formData.service
+            name: formData.name
           }
         }
       });
@@ -73,12 +58,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
             {
               id: data.user.id,
               email: formData.email,
-              name: formData.name,
-              father: formData.father,
-              grade: formData.grade,
-              gender: formData.gender,
-              birth_date: formData.birthDate,
-              service: formData.service
+              name: formData.name
             }
           ]);
           
@@ -87,17 +67,21 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
         }
       }
 
-      // 3. Backup to Google Script (Run in background without await to speed up UI)
-      fetch(url, {
-        method: 'GET',
-        mode: 'no-cors'
-      }).catch(err => console.error('Google Script Backup Error:', err));
+      // 3. Backup to Google Script
+      try {
+        await fetch(url.toString(), {
+          method: 'GET',
+          mode: 'no-cors'
+        });
+      } catch (err) {
+        console.error('Google Script Backup Error:', err);
+      }
       
       setIsSuccess(true);
       setTimeout(() => {
         onClose();
         setIsSuccess(false);
-        setFormData({ name: '', email: '', password: '', birthDate: '', father: '', grade: '', gender: '', service: '' });
+        setFormData({ name: '', email: '', password: '' });
       }, 2000);
     } catch (err) {
       console.error('Error submitting form:', err);
@@ -180,77 +164,6 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
                 className={`w-full px-4 py-3 rounded-xl border outline-none transition-all text-left ${inputBg}`}
                 dir="ltr"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1.5 opacity-90">أب الاعتراف</label>
-              <input 
-                type="text" 
-                name="father"
-                value={formData.father}
-                onChange={handleChange}
-                required
-                placeholder="أدخل اسم أب الاعتراف"
-                className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${inputBg}`}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1.5 opacity-90">اسم الخدمة اللي بتحضر فيها</label>
-              <input 
-                type="text" 
-                name="service"
-                value={formData.service}
-                onChange={handleChange}
-                required
-                placeholder="أدخل اسم الخدمة"
-                className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${inputBg}`}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1.5 opacity-90">السنة الدراسية</label>
-              <select 
-                name="grade"
-                value={formData.grade}
-                onChange={handleChange}
-                required
-                className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${inputBg}`}
-              >
-                <option value="" disabled>اختر السنة الدراسية</option>
-                <option value="اولي اعدادي">أولى إعدادي</option>
-                <option value="تانيه اعدادي">ثانية إعدادي</option>
-                <option value="تالته اعدادي">ثالثة إعدادي</option>
-              </select>
-            </div>
-
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium mb-1.5 opacity-90">تاريخ الميلاد</label>
-                <input 
-                  type="date" 
-                  name="birthDate"
-                  value={formData.birthDate}
-                  onChange={handleChange}
-                  required
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${inputBg}`}
-                  dir="ltr"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="block text-sm font-medium mb-1.5 opacity-90">النوع</label>
-                <select 
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  required
-                  className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${inputBg}`}
-                >
-                  <option value="" disabled>اختر النوع</option>
-                  <option value="ذكر">ذكر</option>
-                  <option value="انثي">أنثى</option>
-                </select>
-              </div>
             </div>
 
             {error && (

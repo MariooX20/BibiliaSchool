@@ -1,13 +1,15 @@
 import { ChevronRight, Book, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-function Year1({ setActiveTab }) {
+function Year1() {
+  const navigate = useNavigate();
   return (
     <div className="flex flex-col w-full min-h-[60vh] p-6 animate-fade-in relative">
       
       {/* Header Section */}
       <div className="flex items-center gap-4 mb-12">
         <button 
-          onClick={() => setActiveTab('courses')}
+          onClick={() => navigate('/courses')}
           className="p-2 rounded-xl bg-stone-200 dark:bg-deep-800 text-stone-700 dark:text-stone-300 hover:bg-stone-300 dark:hover:bg-deep-700 transition-colors"
         >
           <ChevronRight size={24} />
@@ -22,7 +24,7 @@ function Year1({ setActiveTab }) {
         
         {/* العهد القديم */}
         <button 
-          onClick={() => setActiveTab('year1_old')}
+          onClick={() => navigate('/year1_old')}
           className="flex-1 group relative flex flex-col items-center justify-center gap-4 px-8 py-16 rounded-3xl border-2 border-stone-200 dark:border-stone-800 bg-white/50 dark:bg-deep-900/50 hover:bg-gradient-to-br hover:from-amber-500 hover:to-gold-600 hover:text-white hover:border-transparent shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden backdrop-blur-sm"
         >
           <Book size={64} className="stroke-[1.5] mb-2 text-amber-600 group-hover:text-white transition-colors" />
@@ -31,7 +33,7 @@ function Year1({ setActiveTab }) {
 
         {/* العهد الجديد */}
         <button 
-          onClick={() => setActiveTab('year1_new')}
+          onClick={() => navigate('/year1_new')}
           className="flex-1 group relative flex flex-col items-center justify-center gap-4 px-8 py-16 rounded-3xl border-2 border-stone-200 dark:border-stone-800 bg-white/50 dark:bg-deep-900/50 hover:bg-gradient-to-br hover:from-amber-500 hover:to-gold-600 hover:text-white hover:border-transparent shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden backdrop-blur-sm"
         >
           <BookOpen size={64} className="stroke-[1.5] mb-2 text-amber-600 group-hover:text-white transition-colors" />

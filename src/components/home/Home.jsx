@@ -1,20 +1,13 @@
 import {
-  BookOpenCheck,
-  Award,
-  Check,
-  Clock,
   Sparkles,
-  Pause,
-  Play,
   Copy,
   BookmarkCheck,
   Bookmark,
   ChevronLeft,
-  BookOpen,
-  Map,
   Users,
 } from "lucide-react";
-import heroImg from "../../assets/bible_hero.png";
+import heroImg from "../../assets/homehome.jpeg";
+import { useNavigate } from "react-router-dom";
 
 const BIBLE_VERSES = [
   {
@@ -36,7 +29,6 @@ const BIBLE_VERSES = [
 
 function Home({
   themeMode,
-  setActiveTab,
   currentCourse,
   currentLessonIndex,
   handleStartStudy,
@@ -48,6 +40,7 @@ function Home({
   setIsBookmarkedVerse,
   handleCopyText,
 }) {
+  const navigate = useNavigate();
   const verse = BIBLE_VERSES[(verseIndex || 0) % BIBLE_VERSES.length];
 
   const renderVerseOfTheDay = () => (
@@ -104,50 +97,42 @@ function Home({
     </div>
   );
 
-  const renderFeatures = () => (
-    <div className="grid md:grid-cols-3 gap-6 mt-8">
-      {[
-        {
-          title: "مناهج موثوقة",
-          desc: "محتوى دراسي معد بعناية لتأسيس مسيحي متين",
-          icon: BookOpen,
-          color: "text-blue-500",
-          bg: "bg-blue-500/10",
-        },
-        {
-          title: "دراسة مرنة",
-          desc: "تعلم بالسرعة التي تناسبك وفي أي وقت ومكان",
-          icon: Clock,
-          color: "text-gold-500",
-          bg: "bg-gold-500/10",
-        },
-        {
-          title: "شهادات إتمام",
-          desc: "احصل على شهادة عند إتمام كل مستوى دراسي",
-          icon: Award,
-          color: "text-emerald-500",
-          bg: "bg-emerald-500/10",
-        },
-      ].map((feature, idx) => (
-        <div
-          key={idx}
-          className={`p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
-            themeMode === "dark"
-              ? "bg-deep-900/50 border-deep-800 hover:bg-deep-800/80"
-              : themeMode === "sepia"
-                ? "bg-[#efe9d0]/70 border-[#dfd5b4]"
-                : "bg-white/80 border-stone-200 hover:border-stone-300"
-          }`}
-        >
-          <div
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${feature.bg} ${feature.color}`}
-          >
-            <feature.icon size={28} />
-          </div>
-          <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-          <p className="text-sm opacity-70 leading-relaxed">{feature.desc}</p>
+
+
+  const renderEnrollCTA = () => (
+    <div className={`mt-16 relative overflow-hidden rounded-[2.5rem] p-10 md:p-16 border text-center transition-all duration-500 shadow-2xl ${
+      themeMode === "dark" 
+        ? "bg-gradient-to-br from-emerald-900/40 via-teal-900/40 to-deep-900 border-emerald-500/30" 
+        : themeMode === "sepia"
+          ? "bg-gradient-to-br from-[#d4c89f] via-[#e6dcb9] to-[#efe9d0] border-[#dfd5b4]"
+          : "bg-gradient-to-br from-emerald-50 via-teal-50 to-white border-emerald-100"
+    }`}>
+      <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-[80px] -ml-20 -mt-20 pointer-events-none"></div>
+      <div className="absolute bottom-0 right-0 w-64 h-64 bg-teal-500/20 rounded-full blur-[80px] -mr-20 -mb-20 pointer-events-none"></div>
+      
+      <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+        <div className="w-20 h-20 mx-auto bg-gradient-to-tr from-emerald-500 to-teal-500 rounded-3xl flex items-center justify-center text-white shadow-xl rotate-12 hover:rotate-0 transition-transform duration-300">
+          <Users size={40} />
         </div>
-      ))}
+        <h2 className={`text-4xl md:text-5xl font-black ${themeMode === 'dark' ? 'text-white' : 'text-stone-900'}`}>
+          التحق بمدرستنا الآن
+        </h2>
+        <p className={`text-lg md:text-xl leading-relaxed ${themeMode === 'dark' ? 'text-gray-300' : 'text-stone-600'}`}>
+          سجل معنا اليوم لتبدأ رحلتك في دراسة الكتاب المقدس والتمتع بكافة المناهج والميزات التفاعلية المتاحة على المنصة.
+        </p>
+        <div className="pt-4">
+          <button 
+            onClick={() => navigate('/enroll')} 
+            className="relative inline-flex items-center justify-center px-10 py-5 text-xl font-bold text-white transition-all duration-300 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] hover:-translate-y-1 group overflow-hidden"
+          >
+            <span className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-black pointer-events-none"></span>
+            <span className="relative flex items-center gap-3">
+              <Sparkles size={24} className="animate-pulse" />
+              املأ الاستمارة
+            </span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 
@@ -156,51 +141,47 @@ function Home({
       <div className="space-y-10 animate-fade-in text-right">
         {/* Hero Section */}
         <div
-          className={`relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 shadow-2xl ${
+          className={`relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 shadow-2xl bg-cover bg-center bg-no-repeat ${
             themeMode === "dark"
-              ? "bg-gradient-to-br from-deep-900 via-deep-900 to-deep-950 border-deep-700/50"
+              ? "border-deep-700/50"
               : themeMode === "sepia"
-                ? "bg-gradient-to-br from-[#efe9d0] via-[#e6dcb9] to-[#d4c89f] border-[#dfd5b4]"
-                : "bg-gradient-to-br from-white via-stone-50 to-stone-100 border-stone-200"
+                ? "border-[#dfd5b4]"
+                : "border-stone-200"
           }`}
+          style={{ backgroundImage: `url(${heroImg})` }}
         >
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gold-500/20 rounded-full blur-[80px] -mr-40 -mt-40 pointer-events-none"></div>
+          {/* Subtle overlay to ensure text readability over the blue background */}
+          <div className="absolute inset-0 bg-deep-950/40 pointer-events-none z-0"></div>
 
-          <div className="grid lg:grid-cols-12 gap-8 items-center p-8 lg:p-16 relative z-10">
+          <div className="grid lg:grid-cols-12 gap-8 items-center p-8 lg:p-16 relative z-10 min-h-[500px]">
             <div className="lg:col-span-7 space-y-8 text-right animate-slide-up relative z-20">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold bg-gold-500/10 text-gold-600 border border-gold-500/30 backdrop-blur-md">
-                <Sparkles size={16} className="animate-pulse" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold bg-white/10 text-white border border-white/20 backdrop-blur-md">
+                <Sparkles size={16} className="animate-pulse text-gold-400" />
                 <span> Bibilia School</span>
               </div>
 
-              <h2 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.2]">
-                <span
-                  className={
-                    themeMode === "dark" ? "text-white" : "text-stone-900"
-                  }
-                >
+              <h2 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.2] drop-shadow-lg">
+                <span className="text-white">
                   فهمني{" "}
                 </span>{" "}
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-l from-gold-400 via-gold-500 to-amber-600">
+                <span className="text-transparent bg-clip-text bg-gradient-to-l from-gold-300 via-gold-400 to-amber-500 drop-shadow-md">
                   فأتعلم وصاياك
                 </span>
-                <span className="block text-xl md:text-2xl lg:text-3xl font-normal opacity-70 mt-6">
+                <span className="block text-xl md:text-2xl lg:text-3xl font-normal text-white/90 mt-6">
                   (مزمور 119: 73)
                 </span>
               </h2>
 
-              <p
-                className={`text-lg md:text-xl max-w-xl leading-relaxed ${themeMode === "dark" ? "text-gray-300" : "text-stone-600"}`}
-              >
+              <p className="text-lg md:text-xl max-w-xl leading-relaxed text-white/90 drop-shadow-md">
                 مدرسة الكتاب المقدس لسن اعدادي , هي مدرسة تهدف الي تعلم الكتاب
                 المقدس بطرق مختلفة
               </p>
 
               <div className="pt-4 flex flex-wrap gap-4">
                 <button
-                  onClick={() => setActiveTab("courses")}
-                  className="px-8 py-4.5 rounded-2xl font-bold bg-gradient-to-l from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/30 hover:shadow-xl hover:shadow-gold-500/40 hover:-translate-y-1 active:translate-y-0 transition-all flex items-center gap-3 text-lg group"
+                  onClick={() => navigate("/courses")}
+                  className="px-8 py-4.5 rounded-2xl font-bold bg-gradient-to-l from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/30 hover:shadow-xl hover:shadow-gold-500/40 hover:-translate-y-1 active:translate-y-0 transition-all flex items-center gap-3 text-lg group border border-gold-400/30"
                 >
                   استكشف المناهج
                   <ChevronLeft
@@ -210,47 +191,18 @@ function Home({
                 </button>
               </div>
             </div>
-
-            <div className="lg:col-span-5 flex justify-center relative mt-10 lg:mt-0 z-10">
-              <div className="absolute inset-0 bg-gradient-to-tr from-gold-500/20 to-transparent blur-3xl rounded-full animate-pulse pointer-events-none"></div>
-              <img
-                src={heroImg}
-                alt="مدرسة الكتاب المقدس"
-                className="w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[450px] drop-shadow-[0_20px_40px_rgba(238,176,37,0.3)] relative z-10 object-contain hover:scale-105 transition-transform duration-700 ease-out"
-              />
-            </div>
+            
+            {/* Empty column to keep the text on the right and let the left side of the wallpaper show */}
+            <div className="lg:col-span-5 hidden lg:block"></div>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="max-w-4xl mx-auto">
           {renderVerseOfTheDay()}
-          <div
-            className={`rounded-3xl p-10 border flex flex-col justify-center items-center text-center transition-all ${
-              themeMode === "dark"
-                ? "bg-deep-900/50 border-deep-800"
-                : themeMode === "sepia"
-                  ? "bg-[#efe9d0]/70 border-[#dfd5b4]"
-                  : "bg-white/80 border-stone-200"
-            }`}
-          >
-            <div className="w-20 h-20 rounded-full bg-deep-500/10 text-deep-500 flex items-center justify-center mb-6">
-              <Map size={40} />
-            </div>
-            <h3 className="text-3xl font-bold mb-4">ابدأ رحلتك الآن</h3>
-            <p className="text-base opacity-70 mb-8 max-w-md leading-relaxed">
-              لا توجد مناهج قيد الدراسة حالياً. تصفح مكتبة المناهج لاختيار مسار
-              دراسي يناسبك والبدء في التعلم.
-            </p>
-            <button
-              onClick={() => setActiveTab("courses")}
-              className="px-8 py-3.5 rounded-xl font-bold border-2 border-gold-500 text-gold-600 hover:bg-gold-500 hover:text-white transition-all text-lg hover:-translate-y-0.5"
-            >
-              عرض المكتبة
-            </button>
-          </div>
         </div>
 
-        {renderFeatures()}
+
+        {renderEnrollCTA()}
       </div>
     );
   }
@@ -294,7 +246,7 @@ function Home({
 
             <div className="flex flex-wrap gap-4 pt-4">
               <button
-                onClick={() => setActiveTab("courses")}
+                onClick={() => navigate("/courses")}
                 className="px-8 py-4.5 rounded-2xl font-bold bg-gradient-to-l from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/30 hover:shadow-xl hover:shadow-gold-500/40 hover:-translate-y-1 active:translate-y-0 transition-all text-lg"
               >
                 استعراض المناهج
@@ -329,113 +281,11 @@ function Home({
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">{renderVerseOfTheDay()}</div>
-
-        {/* Quick Progress Card */}
-        <div
-          className={`p-8 rounded-3xl border flex flex-col justify-center transition-all hover:shadow-xl ${
-            themeMode === "dark"
-              ? "bg-deep-900/50 border-deep-800"
-              : themeMode === "sepia"
-                ? "bg-[#efe9d0]/70 border-[#dfd5b4]"
-                : "bg-white/80 border-stone-200"
-          }`}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-xl">المنهج الحالي</h3>
-            <span className="p-3 rounded-2xl bg-gold-500/10 text-gold-600">
-              <BookOpenCheck size={24} />
-            </span>
-          </div>
-          <p className="text-2xl font-black mb-2 truncate">
-            {currentCourse.title}
-          </p>
-          <p className="text-base opacity-70 mb-8">
-            {currentCourse.lessons?.filter((l) => l.completed).length || 0} من{" "}
-            {currentCourse.lessons?.length || 0} دروس مكتملة
-          </p>
-
-          <div className="space-y-3 mt-auto">
-            <div className="flex justify-between text-base font-bold">
-              <span>نسبة التقدم</span>
-              <span className="text-gold-600">
-                {currentCourse.progress || 0}%
-              </span>
-            </div>
-            <div className="h-3 w-full bg-black/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-l from-gold-400 to-amber-600 rounded-full transition-all duration-1000 ease-out relative"
-                style={{ width: `${currentCourse.progress || 0}%` }}
-              >
-                <div className="absolute inset-0 bg-white/20 w-full animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="max-w-4xl mx-auto">
+        {renderVerseOfTheDay()}
       </div>
 
-      {/* Quick Stats Dashboard */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        {[
-          {
-            label: "المنهج الفعال",
-            value:
-              currentCourse.title.split(" ")[0] +
-              " " +
-              (currentCourse.title.split(" ")[1] || ""),
-            icon: BookOpenCheck,
-            color: "text-teal-500",
-            bg: "bg-teal-500/10",
-          },
-          {
-            label: "نسبة تقدم الدراسة",
-            value: `${currentCourse.progress || 0}%`,
-            icon: Award,
-            color: "text-gold-500",
-            bg: "bg-gold-500/10",
-          },
-          {
-            label: "الدروس المكتملة",
-            value: `${currentCourse.lessons?.filter((l) => l.completed).length || 0}`,
-            icon: Check,
-            color: "text-emerald-500",
-            bg: "bg-emerald-500/10",
-          },
-          {
-            label: "وقت القراءة اليومي",
-            value: "٢٥ دقيقة",
-            icon: Clock,
-            color: "text-blue-500",
-            bg: "bg-blue-500/10",
-          },
-        ].map((stat, idx) => (
-          <div
-            key={idx}
-            className={`p-6 md:p-8 rounded-3xl border text-right transition-all hover:-translate-y-1 hover:shadow-lg group ${
-              themeMode === "dark"
-                ? "bg-deep-900/50 border-deep-800"
-                : themeMode === "sepia"
-                  ? "bg-[#efe9d0]/70 border-[#dfd5b4]"
-                  : "bg-white/80 border-stone-200 shadow-sm"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <span
-                className={`p-4 rounded-2xl transition-colors ${stat.bg} ${stat.color} group-hover:bg-opacity-20`}
-              >
-                <stat.icon size={28} />
-              </span>
-            </div>
-            <p className="text-sm md:text-base opacity-70 font-medium mb-2">
-              {stat.label}
-            </p>
-            <p className="text-2xl md:text-3xl font-black truncate leading-tight">
-              {stat.value}
-            </p>
-          </div>
-        ))}
-      </div>
+      {renderEnrollCTA()}
     </div>
   );
 }

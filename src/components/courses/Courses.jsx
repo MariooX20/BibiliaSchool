@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { BookOpen, Video, Lock, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-function Courses({ currentUser, setActiveTab }) {
+function Courses({ currentUser }) {
+  const navigate = useNavigate();
   const [toastMessage, setToastMessage] = useState('');
 
   // Clear toast after 3 seconds
@@ -15,7 +17,7 @@ function Courses({ currentUser, setActiveTab }) {
   const handleYear1Click = () => {
     if (!currentUser) {
       setToastMessage('يرجى تسجيل الدخول أولاً للوصول إلى المحاضرات.');
-      setTimeout(() => setActiveTab('login'), 2000);
+      setTimeout(() => navigate('/login'), 2000);
       return;
     }
 
@@ -25,13 +27,13 @@ function Courses({ currentUser, setActiveTab }) {
     }
 
     // Access allowed (authLevel >= 1)
-    setActiveTab('year1');
+    navigate('/year1');
   };
 
   const handleYear2Click = () => {
     if (!currentUser) {
       setToastMessage('يرجى تسجيل الدخول أولاً للوصول إلى المحاضرات.');
-      setTimeout(() => setActiveTab('login'), 2000);
+      setTimeout(() => navigate('/login'), 2000);
       return;
     }
 
@@ -41,7 +43,7 @@ function Courses({ currentUser, setActiveTab }) {
     }
 
     // Access allowed (authLevel >= 2)
-    setActiveTab('year2');
+    navigate('/year2');
   };
 
   return (

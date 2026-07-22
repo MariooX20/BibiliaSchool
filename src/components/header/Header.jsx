@@ -1,11 +1,10 @@
-import { BookOpen, Moon, Sliders, Sun, Menu, X, User, LogOut, Settings } from 'lucide-react'
-import { UserRound } from 'lucide-react';
+import { Moon, Sliders, Sun, Menu, X, User, LogOut, Settings } from 'lucide-react'
+import { UserRound, Sparkles } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react'
 import SignUpModal from '../auth/SignUpModal'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 function Header({
-  activeTab,
-  setActiveTab,
   themeMode,
   setThemeMode,
   mobileMenuOpen,
@@ -13,6 +12,9 @@ function Header({
   currentUser,
   handleLogout
 }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const activeTab = location.pathname === '/' ? 'home' : location.pathname.substring(1);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
@@ -47,7 +49,23 @@ function Header({
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  navigate('/enroll');
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-2 px-5 py-2 rounded-xl text-[15px] font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-all"
+              >
+                <Sparkles size={16} />
+                <span>التحق بنا</span>
+              </button>
+              
+              {/* Vertical separator */}
+              <div className={`w-px h-6 mx-1 ${themeMode === 'dark' ? 'bg-deep-800' : themeMode === 'sepia' ? 'bg-[#dfd5b4]' : 'bg-stone-200'}`}></div>
+            </div>
+
             {[
               { id: 'home', label: 'الرئيسية' },
               { id: 'courses', label: 'المحاضرات' },
@@ -57,11 +75,11 @@ function Header({
               <button
                 key={tab.id}
                 onClick={() => {
-                  setActiveTab(tab.id);
+                  navigate(tab.id === 'home' ? '/' : `/${tab.id}`);
                   setMobileMenuOpen(false);
                 }}
                 className={`px-4 py-2 rounded-xl text-[15px] font-medium transition-all ${
-                  activeTab === tab.id
+                  activeTab.startsWith(tab.id)
                     ? (themeMode === 'dark' ? 'bg-deep-800 text-gold-400 shadow-inner' :
                        themeMode === 'sepia' ? 'bg-[#dfd5b4] text-[#433422]' : 'bg-stone-200 text-stone-900')
                     : 'opacity-70 hover:opacity-100'
@@ -104,7 +122,7 @@ function Header({
                       <div className="py-1">
                         <button
                           onClick={() => {
-                            setActiveTab('settings');
+                            navigate('/settings');
                             setIsUserMenuOpen(false);
                           }}
                           className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors ${
@@ -135,7 +153,7 @@ function Header({
               ) : (
                 <>
                   <button
-                    onClick={() => setActiveTab('login')}
+                    onClick={() => navigate('/login')}
                     className="px-4 py-2 text-sm font-bold rounded-xl text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-deep-800 transition-all"
                   >
                     دخول
@@ -206,6 +224,17 @@ function Header({
                </div>
             )}
 
+            <button
+              onClick={() => {
+                navigate('/enroll');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full py-4 px-5 rounded-2xl flex justify-center items-center gap-2 text-lg font-bold bg-emerald-500 text-white shadow-lg mb-2 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+            >
+              <Sparkles size={20} />
+              <span>التحق بنا</span>
+            </button>
+
             {[
               { id: 'home', label: 'الرئيسية' },
               { id: 'courses', label: 'المناهج الدراسية' },
@@ -215,11 +244,11 @@ function Header({
               <button
                 key={tab.id}
                 onClick={() => {
-                  setActiveTab(tab.id);
+                  navigate(tab.id === 'home' ? '/' : `/${tab.id}`);
                   setMobileMenuOpen(false);
                 }}
                 className={`w-full py-4 px-5 rounded-2xl text-right text-base font-semibold border ${
-                  activeTab === tab.id
+                  activeTab.startsWith(tab.id)
                     ? 'bg-gradient-to-l from-gold-600 to-amber-500 text-white border-transparent shadow-lg'
                     : (themeMode === 'dark' ? 'border-deep-900 text-gray-300' :
                        themeMode === 'sepia' ? 'border-[#dfd5b4] text-[#433422]' : 'border-stone-200 text-stone-700')
@@ -233,7 +262,7 @@ function Header({
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => {
-                    setActiveTab('login');
+                    navigate('/login');
                     setMobileMenuOpen(false);
                   }}
                   className="flex-1 py-4 px-5 rounded-2xl text-center text-base font-bold bg-stone-200 dark:bg-deep-800 text-stone-800 dark:text-stone-200"

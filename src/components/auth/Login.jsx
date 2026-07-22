@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { LogIn, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
-function Login({ setCurrentUser, setActiveTab }) {
+function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -30,7 +32,7 @@ function Login({ setCurrentUser, setActiveTab }) {
       }
 
       if (data.user) {
-        setActiveTab('home'); // Redirect to home on successful login
+        navigate('/'); // Redirect to home on successful login
       }
     } catch (err) {
       console.error('Login error:', err);
