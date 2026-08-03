@@ -1,0 +1,53 @@
+import { useRef } from "react";
+
+const Settings = () => {
+  const fileInput = useRef();
+
+  const openFilePicker = () => {
+    fileInput.current.click();
+  };
+
+  const uploadFile = async (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://localhost:7000/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      console.log(data);
+      alert("File uploaded successfully!");
+    } catch (error) {
+      console.error(error);
+      alert("Upload failed!");
+    }
+  };
+
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <button
+        onClick={openFilePicker}
+        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+      >
+        Upload File
+      </button>
+
+      <input
+        type="file"
+        ref={fileInput}
+        onChange={uploadFile}
+        hidden
+      />
+    </div>
+  );
+};
+
+export default Settings;

@@ -1,4 +1,4 @@
-import { Moon, Sliders, Sun, Menu, X, User, LogOut, Settings } from 'lucide-react'
+import { Moon, Sliders, Sun, Menu, X, User, LogOut } from 'lucide-react'
 import { UserRound, Sparkles } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react'
 import SignUpModal from '../auth/SignUpModal'
@@ -70,7 +70,7 @@ function Header({
               { id: 'home', label: 'الرئيسية' },
               { id: 'courses', label: 'المحاضرات' },
               { id: 'lesson', label: 'ملخصات' },
-              { id: 'settings', label: 'الإعدادات' }
+              // { id: 'settings', label: 'الإعدادات' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -122,7 +122,7 @@ function Header({
                       <div className="py-1">
                         <button
                           onClick={() => {
-                            navigate('/settings');
+                            navigate('/profile');
                             setIsUserMenuOpen(false);
                           }}
                           className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors ${
@@ -130,8 +130,8 @@ function Header({
                             themeMode === 'sepia' ? 'text-[#5a4a35] hover:bg-[#dfd5b4]' : 'text-stone-700 hover:bg-stone-100'
                           }`}
                         >
-                          <Settings size={16} />
-                          الإعدادات
+                          <User size={16} />
+                          الملف الشخصي
                         </button>
                         <button
                           onClick={() => {
@@ -237,9 +237,9 @@ function Header({
 
             {[
               { id: 'home', label: 'الرئيسية' },
-              { id: 'courses', label: 'المناهج الدراسية' },
-              { id: 'lesson', label: 'قاعة الدراسة التفاعلية' },
-              { id: 'settings', label: 'الإعدادات والمظهر' }
+              { id: 'courses', label: 'المحاضرات' },
+              { id: 'lesson', label: 'ملخصات' },
+              ...(currentUser ? [{ id: 'profile', label: 'الملف الشخصي' }] : [])
             ].map((tab) => (
               <button
                 key={tab.id}

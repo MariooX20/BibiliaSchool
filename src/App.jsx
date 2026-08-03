@@ -8,18 +8,16 @@ import Year1OldTestament from './components/courses/Year1Section/3ahdAdem'
 import Year1NewTestament from './components/courses/Year1Section/3ahdGded'
 import Year2 from './components/courses/Year2'
 import Lesson from './components/lesson/Lesson'
-import Settings from './components/settings/Settings'
+import Profile from './components/profile/Profile'
 import Login from './components/auth/Login'
 import Enroll from './components/enroll/Enroll'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 
-
-
 function App() {
   const navigate = useNavigate();
 
-  // Auth State
+  // ── Auth state ───────────────────────────────────────────────────────────
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -39,17 +37,19 @@ function App() {
           id: sessionUser.id,
           email: sessionUser.email,
           name: sessionUser.user_metadata?.name || sessionUser.email,
+          photoURL: sessionUser.user_metadata?.photoURL || null,
           isEnrolled: sessionUser.user_metadata?.is_enrolled === true,
-          authLevel: profile?.auth_level || 0
+          authLevel: profile?.auth_level || 0,
         });
       } catch (err) {
-        console.error("Error fetching profile", err);
+        console.error('Error fetching profile:', err);
         setCurrentUser({
           id: sessionUser.id,
           email: sessionUser.email,
           name: sessionUser.user_metadata?.name || sessionUser.email,
+          photoURL: sessionUser.user_metadata?.photoURL || null,
           isEnrolled: sessionUser.user_metadata?.is_enrolled === true,
-          authLevel: 0
+          authLevel: 0,
         });
       }
     };
@@ -60,9 +60,7 @@ function App() {
     });
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       fetchProfileAndSetUser(session?.user);
     });
 
@@ -75,40 +73,43 @@ function App() {
     navigate('/');
   };
 
-  // Verse of the Day state
+  // ── Verse of the Day state ───────────────────────────────────────────────
   const [verseIndex, setVerseIndex] = useState(0);
-  const [isPlayingVerseAudio, setIsPlayingVerseAudio] = useState(false);
   const [isBookmarkedVerse, setIsBookmarkedVerse] = useState(false);
 
-  // Settings State
-  const [themeMode, setThemeMode] = useState('dark');
-  const [fontSize, setFontSize] = useState(20);
+  /** Copy verse text + reference to clipboard */
+  const handleCopyText = (text, reference) => {
+    const content = `"${text}"\n— ${reference}`;
+    navigator.clipboard.writeText(content).catch((err) =>
+      console.error('Clipboard error:', err)
+    );
+  };
 
+  // ── Theme state ──────────────────────────────────────────────────────────
+  const [themeMode, setThemeMode] = useState('dark');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Apply Theme class to document element
+  // Apply a single theme class to the root element
   useEffect(() => {
     const root = document.documentElement;
     root.className = '';
     if (themeMode === 'sepia') {
       root.classList.add('theme-sepia');
     } else if (themeMode === 'light') {
-      root.classList.add('bg-stone-50', 'text-stone-900');
+      root.classList.add('theme-light');
     } else {
-      root.classList.add('bg-deep-950', 'text-gray-100');
+      root.classList.add('theme-dark');
     }
   }, [themeMode]);
 
-
-
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
-      themeMode === 'dark' ? 'bg-deep-950 text-gray-100' : 
-      themeMode === 'sepia' ? 'bg-[#f7f3e3] text-[#433422]' : 'bg-stone-50 text-stone-900'
+      themeMode === 'dark'  ? 'bg-deep-950 text-gray-100' :
+      themeMode === 'sepia' ? 'bg-[#f7f3e3] text-[#433422]' :
+                              'bg-stone-50 text-stone-900'
     }`}>
-      
 
-      <Header 
+      <Header
         themeMode={themeMode}
         setThemeMode={setThemeMode}
         mobileMenuOpen={mobileMenuOpen}
@@ -125,10 +126,9 @@ function App() {
               themeMode={themeMode}
               verseIndex={verseIndex}
               setVerseIndex={setVerseIndex}
-              isPlayingVerseAudio={isPlayingVerseAudio}
-              setIsPlayingVerseAudio={setIsPlayingVerseAudio}
               isBookmarkedVerse={isBookmarkedVerse}
               setIsBookmarkedVerse={setIsBookmarkedVerse}
+              handleCopyText={handleCopyText}
             />
           } />
 
@@ -138,19 +138,10 @@ function App() {
           <Route path="/year1_new" element={<Year1NewTestament />} />
           <Route path="/year2" element={<Year2 />} />
 
-          <Route path="/lesson" element={
-            <Lesson 
-              themeMode={themeMode}
-            />
-          } />
+          <Route path="/lesson" element={<Lesson themeMode={themeMode} />} />
 
-          <Route path="/settings" element={
-            <Settings 
-              themeMode={themeMode}
-              setThemeMode={setThemeMode}
-              fontSize={fontSize}
-              setFontSize={setFontSize}
-            />
+          <Route path="/profile" element={
+            <Profile themeMode={themeMode} currentUser={currentUser} />
           } />
 
           <Route path="/login" element={<Login />} />
@@ -158,9 +149,7 @@ function App() {
         </Routes>
       </main>
 
-      {/* Footer */}
       <Footer themeMode={themeMode} />
-
     </div>
   )
 }

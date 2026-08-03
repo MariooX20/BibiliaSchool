@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, CheckCircle2, User, Phone, FileText, Calendar, Building, MapPin, GraduationCap, Heart } from 'lucide-react';
+import {
+  Loader2, CheckCircle2, User, Phone, FileText,
+  Calendar, Building, MapPin, GraduationCap, Heart
+} from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 export default function Enroll({ themeMode, currentUser }) {
@@ -18,28 +21,15 @@ export default function Enroll({ themeMode, currentUser }) {
     interviewData: '' 
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(() => {
-    if (currentUser?.isEnrolled) return true;
-    if (currentUser?.email) {
-      return localStorage.getItem(`enrolled_${currentUser.email}`) === 'true';
-    }
-    return false;
-  });
+  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  // Check local storage on mount or when currentUser changes
-  useEffect(() => {
-    if (currentUser?.isEnrolled) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsSuccess(true);
-    } else if (currentUser?.email) {
-      const hasEnrolled = localStorage.getItem(`enrolled_${currentUser.email}`);
-      if (hasEnrolled === 'true') {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setIsSuccess(true);
-      }
-    }
-  }, [currentUser]);
+  // Derived: user has already enrolled (from Supabase metadata or local cache)
+  const alreadyEnrolled =
+    currentUser?.isEnrolled === true ||
+    (currentUser?.email
+      ? localStorage.getItem(`enrolled_${currentUser.email}`) === 'true'
+      : false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -147,7 +137,7 @@ export default function Enroll({ themeMode, currentUser }) {
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none -mr-20 -mt-20"></div>
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-teal-500/10 rounded-full blur-[100px] pointer-events-none -ml-20 -mb-20"></div>
 
-        {isSuccess ? (
+        {isSuccess || alreadyEnrolled ? (
           <div className="relative z-10 text-center py-20 animate-slide-up">
             <div className="w-24 h-24 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8">
               <CheckCircle2 size={48} />
