@@ -6,7 +6,7 @@ import {
   ChevronLeft,
   Users,
 } from "lucide-react";
-import heroImg from "../../assets/homehome.jpeg";
+import heroImg from "../../assets/thehome.jpeg";
 import { useNavigate } from "react-router-dom";
 
 const BIBLE_VERSES = [
@@ -96,7 +96,7 @@ function Home({
     <div className="space-y-10 animate-fade-in text-right">
       {/* Hero Section */}
       <div
-        className={`relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 shadow-2xl bg-contain md:bg-cover bg-center bg-no-repeat bg-[#0d1627] ${
+        className={`relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 shadow-2xl bg-contain md:bg-cover bg-top md:bg-center bg-no-repeat bg-[#0d1627] ${
           themeMode === "dark"
             ? "border-deep-700/50"
             : themeMode === "sepia"
