@@ -60,13 +60,17 @@ const Profile = ({ themeMode, currentUser }) => {
       };
 
       const rawUrl = (import.meta.env.VITE_BACKEND_URL || "").trim();
-      const backendUrl = (
+      const base =
         rawUrl && rawUrl !== "/"
           ? rawUrl
-          : "https://bibliaschoolbackend-production.up.railway.app"
-      ).replace(/\/+$/, "");
+          : "https://bibliaschoolbackend-production.up.railway.app";
+      const targetUrl = new URL(
+        "upload-stream",
+        base.endsWith("/") ? base : base + "/"
+      );
+      targetUrl.search = params.toString();
 
-      xhr.open("POST", `${backendUrl}/upload-stream?${params.toString()}`, true);
+      xhr.open("POST", targetUrl.toString(), true);
       xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
       xhr.send(file);
     } catch (err) {
