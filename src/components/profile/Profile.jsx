@@ -43,7 +43,14 @@ const Profile = ({ themeMode, currentUser }) => {
           setUploadStatus({ type: "success", message: "تم رفع الملف بنجاح!" });
           if (fileInput.current) fileInput.current.value = "";
         } else {
-          setUploadStatus({ type: "error", message: "فشل الرفع!" });
+          let errorMsg = "فشل الرفع!";
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.error) errorMsg += `: ${data.error}`;
+          } catch {
+            if (xhr.responseText) errorMsg += `: ${xhr.responseText}`;
+          }
+          setUploadStatus({ type: "error", message: errorMsg });
         }
       };
 
