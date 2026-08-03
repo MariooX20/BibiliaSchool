@@ -6,7 +6,8 @@ import {
   ChevronLeft,
   Users,
 } from "lucide-react";
-import heroImg from "../../assets/thehome.jpeg";
+import heroBg from "../../assets/1.jpeg";
+import heroLogo from "../../assets/2.png";
 import { useNavigate } from "react-router-dom";
 
 const BIBLE_VERSES = [
@@ -96,19 +97,19 @@ function Home({
     <div className="space-y-10 animate-fade-in text-right">
       {/* Hero Section */}
       <div
-        className={`relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 shadow-2xl bg-contain md:bg-cover bg-top md:bg-center bg-no-repeat bg-[#0d1627] ${
+        className={`relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 shadow-2xl bg-cover bg-center bg-no-repeat bg-[#0d1627] ${
           themeMode === "dark"
             ? "border-deep-700/50"
             : themeMode === "sepia"
               ? "border-[#dfd5b4]"
               : "border-stone-200"
         }`}
-        style={{ backgroundImage: `url(${heroImg})` }}
+        style={{ backgroundImage: `url(${heroBg})` }}
       >
-        {/* Overlay for text readability */}
+        {/* Subtle overlay for text contrast */}
         <div className="absolute inset-0 bg-deep-950/40 pointer-events-none z-0"></div>
 
-        <div className="grid lg:grid-cols-12 gap-8 items-center p-8 lg:p-16 relative z-10 min-h-[500px]">
+        <div className="grid lg:grid-cols-12 gap-8 items-center p-8 lg:p-16 relative z-10 min-h-[480px]">
           <div className="lg:col-span-7 space-y-8 text-right animate-slide-up relative z-20">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold bg-white/10 text-white border border-white/20 backdrop-blur-md">
               <Sparkles size={16} className="animate-pulse text-gold-400" />
@@ -147,8 +148,14 @@ function Home({
             </div>
           </div>
 
-          {/* Empty column so the right side of the wallpaper shows */}
-          <div className="lg:col-span-5 hidden lg:block"></div>
+          {/* Logo / Illustration Column */}
+          <div className="lg:col-span-5 flex justify-center items-center relative z-20">
+            <img
+              src={heroLogo}
+              alt="Biblia School Logo"
+              className="w-full max-w-[260px] sm:max-w-[320px] lg:max-w-[380px] object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+            />
+          </div>
         </div>
       </div>
 
