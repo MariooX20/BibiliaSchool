@@ -54,9 +54,13 @@ const Profile = ({ themeMode, currentUser }) => {
         }
       };
 
-      xhr.onerror = () => {
+      xhr.onerror = (e) => {
+        console.error("Upload XHR Error:", e);
         setIsUploading(false);
-        setUploadStatus({ type: "error", message: "حدث خطأ أثناء رفع الملف!" });
+        setUploadStatus({
+          type: "error",
+          message: "حدث خطأ في الاتصال بالشبكة! يرجى التأكد من الاتصال أو إيقاف Brave Shields للموقع.",
+        });
       };
 
       const rawUrl = (import.meta.env.VITE_BACKEND_URL || "").trim();
