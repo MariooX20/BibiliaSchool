@@ -59,9 +59,12 @@ const Profile = ({ themeMode, currentUser }) => {
         setUploadStatus({ type: "error", message: "حدث خطأ أثناء رفع الملف!" });
       };
 
-      const backendUrl =
-        import.meta.env.VITE_BACKEND_URL ||
-        "https://bibliaschoolbackend-production.up.railway.app";
+      const rawUrl = (import.meta.env.VITE_BACKEND_URL || "").trim();
+      const backendUrl = (
+        rawUrl && rawUrl !== "/"
+          ? rawUrl
+          : "https://bibliaschoolbackend-production.up.railway.app"
+      ).replace(/\/+$/, "");
 
       xhr.open("POST", `${backendUrl}/upload-stream?${params.toString()}`, true);
       xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
