@@ -59,8 +59,11 @@ const Profile = ({ themeMode, currentUser }) => {
         setUploadStatus({ type: "error", message: "حدث خطأ أثناء رفع الملف!" });
       };
 
-      // TODO: change to your deployed Render backend URL once deployed
-      xhr.open("POST", `${import.meta.env.VITE_BACKEND_URL}/upload-stream?${params.toString()}`, true);
+      const backendUrl =
+        import.meta.env.VITE_BACKEND_URL ||
+        "https://bibliaschoolbackend-production.up.railway.app";
+
+      xhr.open("POST", `${backendUrl}/upload-stream?${params.toString()}`, true);
       xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
       xhr.send(file);
     } catch (err) {
