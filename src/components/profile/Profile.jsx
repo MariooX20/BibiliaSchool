@@ -54,15 +54,6 @@ const Profile = ({ themeMode, currentUser }) => {
         }
       };
 
-      xhr.onerror = (e) => {
-        console.error("Upload XHR Error:", e);
-        setIsUploading(false);
-        setUploadStatus({
-          type: "error",
-          message: "حدث خطأ في الاتصال بالشبكة! يرجى التأكد من الاتصال أو إيقاف Brave Shields للموقع.",
-        });
-      };
-
       const rawUrl = (import.meta.env.VITE_BACKEND_URL || "").trim();
       const base =
         rawUrl && rawUrl !== "/"
@@ -73,6 +64,47 @@ const Profile = ({ themeMode, currentUser }) => {
         base.endsWith("/") ? base : base + "/"
       );
       targetUrl.search = params.toString();
+
+      const fetchFallback = async () => {
+        try {
+          setUploadProgress(50);
+          const response = await fetch(targetUrl.toString(), {
+            method: "POST",
+            headers: {
+              "Content-Type": file.type || "application/octet-stream",
+            },
+            body: file,
+          });
+
+          setIsUploading(false);
+          if (response.ok) {
+            setUploadProgress(100);
+            setUploadStatus({ type: "success", message: "تم رفع الملف بنجاح!" });
+            if (fileInput.current) fileInput.current.value = "";
+          } else {
+            const text = await response.text();
+            let errorMsg = "فشل الرفع!";
+            try {
+              const data = JSON.parse(text);
+              if (data.error) errorMsg += `: ${data.error}`;
+            } catch {
+              if (text) errorMsg += `: ${text}`;
+            }
+            setUploadStatus({ type: "error", message: errorMsg });
+          }
+        } catch (err) {
+          setIsUploading(false);
+          setUploadStatus({
+            type: "error",
+            message: err.message || "حدث خطأ أثناء رفع الملف!",
+          });
+        }
+      };
+
+      xhr.onerror = (e) => {
+        console.warn("XHR blocked by browser security/Shields, falling back to fetch()...", e);
+        fetchFallback();
+      };
 
       xhr.open("POST", targetUrl.toString(), true);
       xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
