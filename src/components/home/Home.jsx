@@ -184,11 +184,9 @@ function Home({
           {/* Text Content (Right side in RTL, Centered on Mobile) */}
           <div className="lg:col-span-6 space-y-5 text-center lg:text-right order-1 lg:order-1 self-center">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-white drop-shadow-lg leading-tight">
-              التحق بمدرستنا الآن
-            </h2>
+جاهز تبدأ رحلتك معانا ؟            </h2>
             <p className="text-sm sm:text-base md:text-lg leading-relaxed text-white/90 drop-shadow-md max-w-xl mx-auto lg:mx-0">
-              سجل معنا اليوم لتبدأ رحلتك في دراسة الكتاب المقدس والتمتع بكافة
-              المناهج والميزات التفاعلية المتاحة على المنصة.
+             سجل الأن وكن جزءأ من عائلتنا
             </p>
             <div className="pt-2 flex justify-center lg:justify-start">
               <button

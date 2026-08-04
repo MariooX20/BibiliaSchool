@@ -125,52 +125,40 @@ export default function Enroll({ themeMode, currentUser }) {
     }
 
     try {
-      const response = await fetch(url, {
-        method: 'GET'
-        // Removed mode: 'no-cors' to be able to read the JSON response from Google Script
+      // 1. Submit to Google Sheet via Google Apps Script (no-cors mode to prevent browser CORS block)
+      await fetch(url.toString(), {
+        method: 'GET',
+        mode: 'no-cors'
       });
       
-      const result = await response.json();
-      
-      if (result.success) {
-        setIsSuccess(true);
-        // Update persistent state in Supabase metadata, profiles table & enrollments table
-        try {
-          await supabase.auth.updateUser({
-            data: { is_enrolled: true }
-          });
+      // 2. Update persistent state in Supabase metadata, profiles table & enrollments table
+      try {
+        await supabase.auth.updateUser({
+          data: { is_enrolled: true }
+        });
 
-          if (currentUser?.id) {
-            await supabase
-              .from('profiles')
-              .update({ is_enrolled: true })
-              .eq('id', currentUser.id);
+        if (currentUser?.id) {
+          await supabase
+            .from('profiles')
+            .update({ is_enrolled: true })
+            .eq('id', currentUser.id);
+        }
+
+        await supabase.from('enrollments').insert([
+          {
+            user_id: currentUser?.id,
+            email: currentUser?.email,
+            phone: formData.phone,
+            interview_slot: formData.interviewData
           }
-
-          await supabase.from('enrollments').insert([
-            {
-              user_id: currentUser?.id,
-              email: currentUser?.email,
-              phone: formData.phone,
-              interview_slot: formData.interviewData
-            }
-          ]);
-        } catch (err) {
-          console.error('Failed to update user metadata / enrollments', err);
-        }
-      } else {
-        // If Google Script returns an error
-        if (result.message === "Phone already exists") {
-          setError('رقم الموبايل مسجل بالفعل، لقد قمت بالتقديم مسبقاً.');
-        } else if (result.message === "All fields are required") {
-          setError('يرجى التأكد من ملء جميع البيانات المطلوبة.');
-        } else {
-          setError('حدث خطأ: ' + result.message);
-        }
+        ]);
+      } catch (err) {
+        console.error('Failed to update user metadata / enrollments', err);
       }
+
+      setIsSuccess(true);
     } catch (err) {
       console.error('Error submitting form:', err);
-      // In case of actual network/CORS error
       setError('حدث خطأ في الاتصال، يرجى المحاولة مرة أخرى.');
     } finally {
       setIsLoading(false);
