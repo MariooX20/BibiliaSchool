@@ -32,7 +32,7 @@ function Login() {
       }
 
       if (data.user) {
-        navigate('/'); // Redirect to home on successful login
+        navigate('/'); 
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -100,8 +100,15 @@ function Login() {
                 dir="ltr"
               />
             </div>
-          </div>
-
+            <div className="flex justify-end pt-1">
+              <button 
+                type="button"
+                onClick={() => navigate("/forgot-password")}
+                className="text-xs font-semibold text-gold-500 hover:underline hover:text-gold-400 transition-colors"
+              >
+                هل نسيت كلمة المرور؟
+              </button>
+            </div>
           {error && (
             <div className="flex items-center gap-2 text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl text-sm font-medium">
               <AlertCircle size={18} />

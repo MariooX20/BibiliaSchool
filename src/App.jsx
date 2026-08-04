@@ -10,6 +10,8 @@ import Year2 from './components/courses/Year2'
 import Lesson from './components/lesson/Lesson'
 import Profile from './components/profile/Profile'
 import Login from './components/auth/Login'
+import ForgotPassword from './components/auth/ForgotPassword'
+import ResetPassword from './components/auth/ResetPassword'
 import Enroll from './components/enroll/Enroll'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
@@ -149,6 +151,8 @@ function App() {
           } />
 
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword themeMode={themeMode} />} />
+          <Route path="/reset-password" element={<ResetPassword themeMode={themeMode} />} />
           <Route path="/enroll" element={<Enroll themeMode={themeMode} currentUser={currentUser} />} />
         </Routes>
       </main>
