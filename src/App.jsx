@@ -29,16 +29,20 @@ function App() {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('auth_level')
+          .select('auth_level, is_enrolled')
           .eq('id', sessionUser.id)
           .single();
+
+        const enrolledStatus = (profile && profile.is_enrolled !== undefined && profile.is_enrolled !== null)
+          ? profile.is_enrolled === true
+          : sessionUser.user_metadata?.is_enrolled === true;
 
         setCurrentUser({
           id: sessionUser.id,
           email: sessionUser.email,
           name: sessionUser.user_metadata?.name || sessionUser.email,
           photoURL: sessionUser.user_metadata?.photoURL || null,
-          isEnrolled: sessionUser.user_metadata?.is_enrolled === true,
+          isEnrolled: enrolledStatus,
           authLevel: profile?.auth_level || 0,
         });
       } catch (err) {

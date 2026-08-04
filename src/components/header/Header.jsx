@@ -3,6 +3,7 @@ import { UserRound, Sparkles } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react'
 import SignUpModal from '../auth/SignUpModal'
 import { useNavigate, useLocation } from 'react-router-dom'
+import logo from "../../assets/2.png";
 
 function Header({
   themeMode,
@@ -39,13 +40,8 @@ function Header({
       }`}>
         <div className="max-w-6xl mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <img src="/icon.png" alt="Bibilia School Logo" className="w-auto h-20 scale-125 object-contain drop-shadow-md origin-left" />
-            <div>
-              {/* <h1 className="font-bold text-lg md:text-xl tracking-tight leading-none bg-gradient-to-l from-gold-400 to-amber-500 bg-clip-text text-transparent">
-               Bibilia School
-              </h1> */}
-            </div>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
+            <img src={logo} alt="Biblia School Logo" className="w-auto h-14 md:h-16 lg:h-18 object-contain drop-shadow-md hover:scale-105 transition-transform" />
           </div>
 
           {/* Desktop Navigation */}

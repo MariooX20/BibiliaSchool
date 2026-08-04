@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import heroBg from "../../assets/1.jpeg";
 import heroLogo from "../../assets/2.png";
+import bannerBg from "../../assets/banner.jpeg";
+import peopleImg from "../../assets/people.png";
 import { useNavigate } from "react-router-dom";
 
 const BIBLE_VERSES = [
@@ -94,10 +96,10 @@ function Home({
   );
 
   return (
-    <div className="space-y-10 animate-fade-in text-right">
+    <div className="space-y-10 animate-fade-in text-right pb-12">
       {/* Hero Section */}
       <div
-        className={`relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 shadow-2xl bg-cover bg-center bg-no-repeat bg-[#0d1627] ${
+        className={`relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 shadow-2xl bg-cover [background-position:15%_center] lg:bg-center bg-no-repeat bg-[#0d1627] ${
           themeMode === "dark"
             ? "border-deep-700/50"
             : themeMode === "sepia"
@@ -110,11 +112,8 @@ function Home({
         <div className="absolute inset-0 bg-deep-950/40 pointer-events-none z-0"></div>
 
         <div className="grid lg:grid-cols-12 gap-8 items-center p-8 lg:p-16 relative z-10 min-h-[480px]">
-          <div className="lg:col-span-7 space-y-8 text-right animate-slide-up relative z-20">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold bg-white/10 text-white border border-white/20 backdrop-blur-md">
-              <Sparkles size={16} className="animate-pulse text-gold-400" />
-              <span> Biblia School</span>
-            </div>
+          <div className="lg:col-span-7 space-y-6 text-right animate-slide-up relative z-20">
+    
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-[1.2] drop-shadow-lg">
               <span className="text-white">
@@ -134,7 +133,17 @@ function Home({
               المقدس بطرق مختلفة
             </p>
 
-            <div className="pt-4 flex flex-wrap gap-4">
+            {/* Mobile Logo: positioned below the text and above the button */}
+            <div className="lg:hidden flex justify-center pt-4 pb-2">
+              <img
+                src={heroLogo}
+                alt="Biblia School Logo"
+                className="w-full max-w-[230px] sm:max-w-[290px] object-contain drop-shadow-2xl translate-y-2"
+              />
+            </div>
+
+            {/* Button */}
+            <div className="pt-2 flex flex-wrap gap-4 justify-center lg:justify-start">
               <button
                 onClick={() => navigate("/courses")}
                 className="px-8 py-4 rounded-2xl font-bold bg-gradient-to-l from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/30 hover:shadow-xl hover:shadow-gold-500/40 hover:-translate-y-1 active:translate-y-0 transition-all flex items-center gap-3 text-lg group border border-gold-400/30"
@@ -148,8 +157,8 @@ function Home({
             </div>
           </div>
 
-          {/* Logo / Illustration Column */}
-          <div className="lg:col-span-5 flex justify-center items-center relative z-20">
+          {/* Desktop Logo Column */}
+          <div className="hidden lg:flex lg:col-span-5 justify-center items-center relative z-20">
             <img
               src={heroLogo}
               alt="Biblia School Logo"
@@ -163,38 +172,44 @@ function Home({
         {renderVerseOfTheDay()}
       </div>
 
-      {/* Enroll CTA */}
-      <div className={`mt-16 relative overflow-hidden rounded-[2.5rem] p-10 md:p-16 border text-center transition-all duration-500 shadow-2xl ${
-        themeMode === "dark"
-          ? "bg-gradient-to-br from-emerald-900/40 via-teal-900/40 to-deep-900 border-emerald-500/30"
-          : themeMode === "sepia"
-            ? "bg-gradient-to-br from-[#d4c89f] via-[#e6dcb9] to-[#efe9d0] border-[#dfd5b4]"
-            : "bg-gradient-to-br from-emerald-50 via-teal-50 to-white border-emerald-100"
-      }`}>
-        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-[80px] -ml-20 -mt-20 pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-64 h-64 bg-teal-500/20 rounded-full blur-[80px] -mr-20 -mb-20 pointer-events-none"></div>
+      {/* Enroll CTA Banner */}
+      <div
+        className="mt-16 relative overflow-hidden rounded-[2.5rem] shadow-2xl bg-cover bg-center bg-no-repeat border-0"
+        style={{ backgroundImage: `url(${bannerBg})` }}
+      >
+        {/* Subtle overlay for contrast */}
+        <div className="absolute inset-0 bg-deep-950/20 pointer-events-none z-0"></div>
 
-        <div className="relative z-10 max-w-3xl mx-auto space-y-8">
-          <div className="w-20 h-20 mx-auto bg-gradient-to-tr from-emerald-500 to-teal-500 rounded-3xl flex items-center justify-center text-white shadow-xl rotate-12 hover:rotate-0 transition-transform duration-300">
-            <Users size={40} />
+        <div className="grid lg:grid-cols-12 gap-8 items-center p-6 md:p-10 lg:p-12 relative z-10 min-h-[380px] lg:min-h-[460px]">
+          {/* Text Content (Right side in RTL, Centered on Mobile) */}
+          <div className="lg:col-span-6 space-y-5 text-center lg:text-right order-1 lg:order-1 self-center">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-white drop-shadow-lg leading-tight">
+              التحق بمدرستنا الآن
+            </h2>
+            <p className="text-sm sm:text-base md:text-lg leading-relaxed text-white/90 drop-shadow-md max-w-xl mx-auto lg:mx-0">
+              سجل معنا اليوم لتبدأ رحلتك في دراسة الكتاب المقدس والتمتع بكافة
+              المناهج والميزات التفاعلية المتاحة على المنصة.
+            </p>
+            <div className="pt-2 flex justify-center lg:justify-start">
+              <button
+                onClick={() => navigate("/enroll")}
+                className="relative inline-flex items-center justify-center px-7 py-3.5 sm:px-8 sm:py-4 text-base sm:text-lg font-bold text-white transition-all duration-300 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:-translate-y-1 active:translate-y-0 group overflow-hidden border border-emerald-400/30"
+              >
+                <span className="relative flex items-center gap-2.5">
+                  <Sparkles size={20} className="animate-pulse" />
+                  املأ الاستمارة
+                </span>
+              </button>
+            </div>
           </div>
-          <h2 className={`text-4xl md:text-5xl font-black ${themeMode === 'dark' ? 'text-white' : 'text-stone-900'}`}>
-            التحق بمدرستنا الآن
-          </h2>
-          <p className={`text-lg md:text-xl leading-relaxed ${themeMode === 'dark' ? 'text-gray-300' : 'text-stone-600'}`}>
-            سجل معنا اليوم لتبدأ رحلتك في دراسة الكتاب المقدس والتمتع بكافة المناهج والميزات التفاعلية المتاحة على المنصة.
-          </p>
-          <div className="pt-4">
-            <button
-              onClick={() => navigate('/enroll')}
-              className="relative inline-flex items-center justify-center px-10 py-5 text-xl font-bold text-white transition-all duration-300 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] hover:-translate-y-1 group overflow-hidden"
-            >
-              <span className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-black pointer-events-none"></span>
-              <span className="relative flex items-center gap-3">
-                <Sparkles size={24} className="animate-pulse" />
-                املأ الاستمارة
-              </span>
-            </button>
+
+          {/* People Image (Extra Large & Shifted Far Left) */}
+          <div className="lg:col-span-6 flex justify-start order-2 lg:order-2 pt-0 lg:pt-0">
+            <img
+              src={peopleImg}
+              alt="Students"
+              className="w-full max-w-[360px] sm:max-w-[460px] md:max-w-[560px] lg:max-w-[850px] xl:max-w-[980px] object-contain drop-shadow-2xl mx-0 -ml-6 sm:-ml-12 lg:-ml-52 xl:-ml-72 -translate-x-16 sm:-translate-x-24 md:-translate-x-36 lg:-translate-x-56 xl:-translate-x-72 mb-0 lg:-mb-16 scale-[1.35] sm:scale-[1.5] lg:scale-[1.8] xl:scale-[2] origin-bottom-left translate-y-8 sm:translate-y-10 md:translate-y-14 lg:translate-y-18 xl:translate-y-20"
+            />
           </div>
         </div>
       </div>

@@ -1,10 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Loader2, CheckCircle2, User, Phone, FileText,
   Calendar, Building, MapPin, GraduationCap, Heart
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+
+const INTERVIEW_SLOTS = [
+  // الجمعة 21 أغسطس (كل 15 دقيقة من 5 مساءً حتى 8 مساءً)
+  "الجمعة 21 أغسطس - 5:00 مساءً",
+  "الجمعة 21 أغسطس - 5:15 مساءً",
+  "الجمعة 21 أغسطس - 5:30 مساءً",
+  "الجمعة 21 أغسطس - 5:45 مساءً",
+  "الجمعة 21 أغسطس - 6:00 مساءً",
+  "الجمعة 21 أغسطس - 6:15 مساءً",
+  "الجمعة 21 أغسطس - 6:30 مساءً",
+  "الجمعة 21 أغسطس - 6:45 مساءً",
+  "الجمعة 21 أغسطس - 7:00 مساءً",
+  "الجمعة 21 أغسطس - 7:15 مساءً",
+  "الجمعة 21 أغسطس - 7:30 مساءً",
+  "الجمعة 21 أغسطس - 7:45 مساءً",
+  "الجمعة 21 أغسطس - 8:00 مساءً",
+
+  // الجمعة 28 أغسطس (كل 15 دقيقة من 5 مساءً حتى 8 مساءً)
+  "الجمعة 28 أغسطس - 5:00 مساءً",
+  "الجمعة 28 أغسطس - 5:15 مساءً",
+  "الجمعة 28 أغسطس - 5:30 مساءً",
+  "الجمعة 28 أغسطس - 5:45 مساءً",
+  "الجمعة 28 أغسطس - 6:00 مساءً",
+  "الجمعة 28 أغسطس - 6:15 مساءً",
+  "الجمعة 28 أغسطس - 6:30 مساءً",
+  "الجمعة 28 أغسطس - 6:45 مساءً",
+  "الجمعة 28 أغسطس - 7:00 مساءً",
+  "الجمعة 28 أغسطس - 7:15 مساءً",
+  "الجمعة 28 أغسطس - 7:30 مساءً",
+  "الجمعة 28 أغسطس - 7:45 مساءً",
+  "الجمعة 28 أغسطس - 8:00 مساءً",
+];
 
 export default function Enroll({ themeMode, currentUser }) {
   const navigate = useNavigate();
@@ -23,13 +55,42 @@ export default function Enroll({ themeMode, currentUser }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [slotCounts, setSlotCounts] = useState({});
 
-  // Derived: user has already enrolled (from Supabase metadata or local cache)
-  const alreadyEnrolled =
-    currentUser?.isEnrolled === true ||
-    (currentUser?.email
-      ? localStorage.getItem(`enrolled_${currentUser.email}`) === 'true'
-      : false);
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        // 1. Query Supabase enrollments table for real-time slot counts
+        const { data, error: supaErr } = await supabase
+          .from('enrollments')
+          .select('interview_slot');
+        
+        if (data && !supaErr) {
+          const counts = {};
+          data.forEach((item) => {
+            if (item.interview_slot) {
+              counts[item.interview_slot] = (counts[item.interview_slot] || 0) + 1;
+            }
+          });
+          setSlotCounts(counts);
+          return;
+        }
+
+        // 2. Fallback to Google Apps Script
+        const res = await fetch('https://script.google.com/macros/s/AKfycbwiBZCpEcsS9tW40zuddZuW6rYskc2R2JpZxZ4xluK4TGSqkBf6lPQOJy6XiGVNNRQq/exec?action=getSlotCounts');
+        const scriptData = await res.json();
+        if (scriptData && scriptData.counts) {
+          setSlotCounts(scriptData.counts);
+        }
+      } catch (err) {
+        console.log('Slot counts fetch optional:', err);
+      }
+    };
+    fetchCounts();
+  }, []);
+
+  // Derived: user has already enrolled (checked directly from Supabase profile/metadata)
+  const alreadyEnrolled = currentUser?.isEnrolled === true;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -73,16 +134,29 @@ export default function Enroll({ themeMode, currentUser }) {
       
       if (result.success) {
         setIsSuccess(true);
-        if (currentUser?.email) {
-          localStorage.setItem(`enrolled_${currentUser.email}`, 'true');
-        }
-        // Update persistent state in Supabase metadata
+        // Update persistent state in Supabase metadata, profiles table & enrollments table
         try {
           await supabase.auth.updateUser({
             data: { is_enrolled: true }
           });
+
+          if (currentUser?.id) {
+            await supabase
+              .from('profiles')
+              .update({ is_enrolled: true })
+              .eq('id', currentUser.id);
+          }
+
+          await supabase.from('enrollments').insert([
+            {
+              user_id: currentUser?.id,
+              email: currentUser?.email,
+              phone: formData.phone,
+              interview_slot: formData.interviewData
+            }
+          ]);
         } catch (err) {
-          console.error('Failed to update user metadata', err);
+          console.error('Failed to update user metadata / enrollments', err);
         }
       } else {
         // If Google Script returns an error
@@ -355,12 +429,30 @@ export default function Enroll({ themeMode, currentUser }) {
                   }`}
                 >
                   <option value="" disabled>اختر ميعاد مناسب لك...</option>
-                  <option value="15_aug_5pm">الخميس 15 أغسطس - 5:00 مساءً</option>
-                  <option value="15_aug_7pm">الخميس 15 أغسطس - 7:00 مساءً</option>
-                  <option value="16_aug_4pm">الجمعة 16 أغسطس - 4:00 مساءً</option>
-                  <option value="16_aug_6pm">الجمعة 16 أغسطس - 6:00 مساءً</option>
-                  <option value="17_aug_5pm">السبت 17 أغسطس - 5:00 مساءً</option>
-                  <option value="17_aug_7pm">السبت 17 أغسطس - 7:00 مساءً</option>
+
+                  <optgroup label="📅 الجمعة 21 أغسطس">
+                    {INTERVIEW_SLOTS.filter(slot => slot.startsWith("الجمعة 21 أغسطس")).map((slot) => {
+                      const count = slotCounts[slot] || 0;
+                      const isFull = count >= 6;
+                      return (
+                        <option key={slot} value={slot} disabled={isFull}>
+                          {slot} {isFull ? '❌ (مكتمل - 6/6)' : count > 0 ? `(${6 - count} أماكن متبقية)` : ''}
+                        </option>
+                      );
+                    })}
+                  </optgroup>
+
+                  <optgroup label="📅 الجمعة 28 أغسطس">
+                    {INTERVIEW_SLOTS.filter(slot => slot.startsWith("الجمعة 28 أغسطس")).map((slot) => {
+                      const count = slotCounts[slot] || 0;
+                      const isFull = count >= 6;
+                      return (
+                        <option key={slot} value={slot} disabled={isFull}>
+                          {slot} {isFull ? '❌ (مكتمل - 6/6)' : count > 0 ? `(${6 - count} أماكن متبقية)` : ''}
+                        </option>
+                      );
+                    })}
+                  </optgroup>
                 </select>
               </div>
 
