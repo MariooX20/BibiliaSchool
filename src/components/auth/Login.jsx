@@ -41,7 +41,7 @@ function Login({ themeMode }) {
       if (err.message === 'Invalid login credentials') {
          setError('البريد الإلكتروني أو كلمة المرور غير صحيحة.');
       } else if (err.message === 'Email not confirmed') {
-         setError('يرجى تأكيد بريدك الإلكتروني أولاً (يرجى إيقاف Confirm email في Supabase).');
+         setError('يرجى تأكيد بريدك الإلكتروني أولاً من الرابط المرسل إلى بريدك الإلكتروني.');
       } else {
          setError(err.message || 'حدث خطأ أثناء تسجيل الدخول.');
       }
