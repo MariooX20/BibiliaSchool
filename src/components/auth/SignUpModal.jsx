@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Loader2, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 export default function SignUpModal({ isOpen, onClose, themeMode }) {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -82,7 +84,8 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
         onClose();
         setIsSuccess(false);
         setFormData({ name: '', email: '', password: '' });
-      }, 2000);
+        navigate('/', { replace: true });
+      }, 1000);
     } catch (err) {
       console.error('Error submitting form:', err);
       setError(err.message || 'حدث خطأ أثناء التسجيل. حاول مرة أخرى.');

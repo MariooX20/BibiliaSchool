@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { LogIn, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import SignUpModal from './SignUpModal';
 
-function Login() {
+function Login({ themeMode }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -32,7 +34,7 @@ function Login() {
       }
 
       if (data.user) {
-        navigate('/'); 
+        navigate('/', { replace: true }); 
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -109,6 +111,8 @@ function Login() {
                 هل نسيت كلمة المرور؟
               </button>
             </div>
+          </div>
+
           {error && (
             <div className="flex items-center gap-2 text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl text-sm font-medium">
               <AlertCircle size={18} />
@@ -125,6 +129,23 @@ function Login() {
             دخول
           </button>
         </form>
+
+        <div className="mt-6 pt-4 border-t border-stone-200 dark:border-stone-800 text-center text-sm">
+          <span className="opacity-75">ليس لديك حساب؟ </span>
+          <button
+            type="button"
+            onClick={() => setIsSignUpModalOpen(true)}
+            className="font-bold text-gold-500 hover:underline hover:text-gold-400 transition-colors mr-1"
+          >
+            إنشاء حساب جديد
+          </button>
+        </div>
+
+        <SignUpModal
+          isOpen={isSignUpModalOpen}
+          onClose={() => setIsSignUpModalOpen(false)}
+          themeMode={themeMode}
+        />
       </div>
     </div>
   );

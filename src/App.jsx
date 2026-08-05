@@ -7,7 +7,7 @@ import Year1 from './components/courses/Year1Section/Year1'
 import Year1OldTestament from './components/courses/Year1Section/3ahdAdem'
 import Year1NewTestament from './components/courses/Year1Section/3ahdGded'
 import Year2 from './components/courses/Year2'
-import Lesson from './components/lesson/Lesson'
+import ContactUs from './components/contactus/ContactUs'
 import Profile from './components/profile/Profile'
 import Login from './components/auth/Login'
 import ForgotPassword from './components/auth/ForgotPassword'
@@ -144,13 +144,13 @@ function App() {
           <Route path="/year1_new" element={<Year1NewTestament />} />
           <Route path="/year2" element={<Year2 />} />
 
-          <Route path="/lesson" element={<Lesson themeMode={themeMode} />} />
+          <Route path="/contactus" element={<ContactUs themeMode={themeMode} currentUser={currentUser} />} />
 
           <Route path="/profile" element={
             <Profile themeMode={themeMode} currentUser={currentUser} />
           } />
 
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Login themeMode={themeMode} />} />
           <Route path="/forgot-password" element={<ForgotPassword themeMode={themeMode} />} />
           <Route path="/reset-password" element={<ResetPassword themeMode={themeMode} />} />
           <Route path="/enroll" element={<Enroll themeMode={themeMode} currentUser={currentUser} />} />

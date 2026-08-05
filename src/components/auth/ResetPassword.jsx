@@ -43,8 +43,8 @@ export default function ResetPassword({ themeMode }) {
 
       setIsSuccess(true);
       setTimeout(() => {
-        navigate('/login');
-      }, 2500);
+        navigate('/', { replace: true });
+      }, 1800);
     } catch (err) {
       console.error('Update password error:', err);
       setError(err.message || 'حدث خطأ أثناء تغيير كلمة المرور.');
@@ -87,7 +87,7 @@ export default function ResetPassword({ themeMode }) {
             </div>
             <h3 className="text-xl font-bold">تم تغيير كلمة المرور بنجاح!</h3>
             <p className="text-sm opacity-80">
-              جاري تحويلك لصفحة تسجيل الدخول...
+              جاري تحويلك للصفحة الرئيسية...
             </p>
           </div>
         ) : (

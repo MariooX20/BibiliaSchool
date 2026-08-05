@@ -65,7 +65,7 @@ function Header({
             {[
               { id: 'home', label: 'الرئيسية' },
               { id: 'courses', label: 'المحاضرات' },
-              { id: 'lesson', label: 'ملخصات' },
+              { id: 'contactus', label: 'تواصل معنا' },
               // { id: 'settings', label: 'الإعدادات' }
             ].map((tab) => (
               <button
@@ -234,7 +234,7 @@ function Header({
             {[
               { id: 'home', label: 'الرئيسية' },
               { id: 'courses', label: 'المحاضرات' },
-              { id: 'lesson', label: 'ملخصات' },
+              { id: 'contactus', label: 'تواصل معنا' },
               ...(currentUser ? [{ id: 'profile', label: 'الملف الشخصي' }] : [])
             ].map((tab) => (
               <button
