@@ -60,11 +60,6 @@ function App() {
       }
     };
 
-    // Clean up # hash from address bar after Supabase Auth redirect
-    if (window.location.hash.includes('access_token') || window.location.hash === '#') {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
-    }
-
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       fetchProfileAndSetUser(session?.user);
