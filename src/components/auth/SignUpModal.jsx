@@ -80,12 +80,6 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
       }
       
       setIsSuccess(true);
-      setTimeout(() => {
-        onClose();
-        setIsSuccess(false);
-        setFormData({ name: '', email: '', password: '' });
-        navigate('/', { replace: true });
-      }, 1000);
     } catch (err) {
       console.error('Error submitting form:', err);
       setError(err.message || 'حدث خطأ أثناء التسجيل. حاول مرة أخرى.');
@@ -124,9 +118,26 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
         </div>
 
         {isSuccess ? (
-          <div className="flex flex-col items-center justify-center py-8 text-green-500 gap-4 animate-fade-in">
-            <CheckCircle2 size={64} className="animate-bounce" />
-            <p className="font-semibold text-lg">تم التسجيل بنجاح!</p>
+          <div className="flex flex-col items-center justify-center py-6 text-center space-y-4 animate-fade-in">
+            <div className="w-16 h-16 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center">
+              <CheckCircle2 size={40} />
+            </div>
+            <h3 className="text-xl font-bold text-emerald-500">تم إنشاء الحساب بنجاح! 📩</h3>
+            <p className="opacity-80 text-sm max-w-md leading-relaxed">
+              تم إرسال رابط تأكيد إلى بريدك الإلكتروني (<strong>{formData.email}</strong>).
+              يرجى فتح بريدك والضغط على رابط التفعيل لتتمكن من تسجيل الدخول.
+            </p>
+            <button
+              onClick={() => {
+                onClose();
+                setIsSuccess(false);
+                setFormData({ name: '', email: '', password: '' });
+                navigate('/login');
+              }}
+              className="mt-4 px-6 py-2.5 rounded-xl font-bold bg-gold-600 hover:bg-gold-500 text-white shadow-md transition-all text-sm"
+            >
+              الانتقال لصفحة تسجيل الدخول
+            </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
