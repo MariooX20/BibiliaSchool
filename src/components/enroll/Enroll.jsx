@@ -125,36 +125,37 @@ export default function Enroll({ themeMode, currentUser }) {
     }
 
     try {
-      // 1. Submit to Google Sheet via Google Apps Script (no-cors mode to prevent browser CORS block)
-      await fetch(url.toString(), {
+      // 1. Send to Google Sheet in background (non-blocking)
+      fetch(url.toString(), {
         method: 'GET',
         mode: 'no-cors'
-      });
-      
-      // 2. Update persistent state in Supabase metadata, profiles table & enrollments table
-      try {
-        await supabase.auth.updateUser({
+      }).catch(err => console.error('Google Sheet backup error:', err));
+
+      // 2. Perform Supabase updates in parallel for instant submission speed
+      const supabaseTasks = [
+        supabase.auth.updateUser({
           data: { is_enrolled: true }
-        });
-
-        if (currentUser?.id) {
-          await supabase
-            .from('profiles')
-            .update({ is_enrolled: true })
-            .eq('id', currentUser.id);
-        }
-
-        await supabase.from('enrollments').insert([
+        }),
+        supabase.from('enrollments').insert([
           {
             user_id: currentUser?.id,
             email: currentUser?.email,
             phone: formData.phone,
             interview_slot: formData.interviewData
           }
-        ]);
-      } catch (err) {
-        console.error('Failed to update user metadata / enrollments', err);
+        ])
+      ];
+
+      if (currentUser?.id) {
+        supabaseTasks.push(
+          supabase
+            .from('profiles')
+            .update({ is_enrolled: true })
+            .eq('id', currentUser.id)
+        );
       }
+
+      await Promise.all(supabaseTasks);
 
       setIsSuccess(true);
     } catch (err) {
