@@ -26,63 +26,48 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
     setError('');
 
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwiBZCpEcsS9tW40zuddZuW6rYskc2R2JpZxZ4xluK4TGSqkBf6lPQOJy6XiGVNNRQq/exec';
-    
     const url = new URL(scriptURL);
     url.searchParams.append('name', formData.name);
     url.searchParams.append('email', formData.email);
     url.searchParams.append('password', formData.password);
-    // Also add capitalized versions just in case the script expects them
-    url.searchParams.append('Name', formData.name);
-    url.searchParams.append('Email', formData.email);
-    url.searchParams.append('Password', formData.password);
 
     try {
       // 1. Sign up with Supabase
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            name: formData.name
-          }
-        }
+        options: { data: { name: formData.name } }
       });
 
-      if (signUpError) {
-        throw signUpError;
-      }
+      if (signUpError) throw signUpError;
 
-      // 2. Insert into profiles table
+      // 2. Insert into profiles table (non-blocking on failure)
       if (data?.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: data.user.id,
-              email: formData.email,
-              name: formData.name
-            }
-          ]);
-          
-        if (profileError) {
-          console.error('Error inserting profile:', profileError);
-        }
+        supabase.from('profiles').insert([{
+          id: data.user.id,
+          email: formData.email,
+          name: formData.name
+        }]).then(({ error: profileError }) => {
+          if (profileError) console.error('Profile insert error:', profileError);
+        });
       }
 
-      // 3. Backup to Google Script
-      try {
-        await fetch(url.toString(), {
-          method: 'GET',
-          mode: 'no-cors'
-        });
-      } catch (err) {
-        console.error('Google Script Backup Error:', err);
-      }
-      
+      // 3. Backup to Google Script — fire and forget (no await needed)
+      fetch(url.toString(), { method: 'GET', mode: 'no-cors' })
+        .catch(err => console.error('Google Script Backup Error:', err));
+
       setIsSuccess(true);
     } catch (err) {
       console.error('Error submitting form:', err);
-      setError(err.message || 'حدث خطأ أثناء التسجيل. حاول مرة أخرى.');
+      let rawMsg = typeof err === 'string' ? err : (err?.message || err?.error_description || '');
+      if (typeof rawMsg !== 'string' || rawMsg === '{}' || !rawMsg.trim()) {
+        rawMsg = 'حدث خطأ أثناء التسجيل. يرجى التأكد من إعدادات البريد الإلكتروني أو المحاولة لاحقاً.';
+      }
+      if (rawMsg.toLowerCase().includes('rate limit')) {
+        setError('لقد تجاوزت عدد محاولات التسجيل المسموح بها مؤقتاً. يرجى الانتظار بضع دقائق.');
+      } else {
+        setError(rawMsg);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -112,9 +97,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
           <h2 className="text-2xl font-bold bg-gradient-to-l from-gold-400 to-amber-500 bg-clip-text text-transparent mb-2">
             إنشاء حساب جديد
           </h2>
-          <p className="opacity-70 text-sm">
-            انضم إلينا للاستفادة من جميع الميزات والمحاضرات
-          </p>
+      
         </div>
 
         {isSuccess ? (
@@ -132,11 +115,11 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
                 onClose();
                 setIsSuccess(false);
                 setFormData({ name: '', email: '', password: '' });
-                navigate('/login');
+                navigate('/');
               }}
               className="mt-4 px-6 py-2.5 rounded-xl font-bold bg-gold-600 hover:bg-gold-500 text-white shadow-md transition-all text-sm"
             >
-              الانتقال لصفحة تسجيل الدخول
+              العودة للرئيسية
             </button>
           </div>
         ) : (

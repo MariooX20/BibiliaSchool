@@ -1,14 +1,21 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { KeyRound, Mail, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 export default function ForgotPassword({ themeMode }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (searchParams.get('expired') === 'true') {
+      setError('انتهت صلاحية رابط إعادة التعيين أو تم استخدامه مسبقاً. يرجى طلب رابط جديد.');
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,13 +37,21 @@ export default function ForgotPassword({ themeMode }) {
       );
 
       if (resetError) {
+        if (resetError.message?.toLowerCase().includes('rate limit')) {
+          throw new Error('لقد تجاوزت عدد محاولات الإرسال المسموح بها مؤقتاً. يرجى الانتظار القليل من الوقت قبل إرسال رابط جديد.');
+        }
         throw resetError;
       }
 
       setIsSubmitted(true);
     } catch (err) {
       console.error('Password reset error:', err);
-      setError(err.message || 'حدث خطأ أثناء إرسال رابط إعادة التعيين.');
+      const msg = err.message || '';
+      if (msg.toLowerCase().includes('rate limit')) {
+        setError('لقد تجاوزت عدد محاولات الإرسال المسموح بها مؤقتاً. يرجى الانتظار القليل من الوقت قبل إعادة المحاولة.');
+      } else {
+        setError(msg || 'حدث خطأ أثناء إرسال رابط إعادة التعيين.');
+      }
     } finally {
       setIsLoading(false);
     }

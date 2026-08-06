@@ -1,53 +1,67 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  MessageSquare, Send, CheckCircle2, User,
-  HelpCircle, ExternalLink, MessageCircle
+  MessageSquare, Send, CheckCircle2, User, Phone,
+  HelpCircle, ExternalLink, MessageCircle, Loader2
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 export default function ContactUs({ themeMode, currentUser }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    name: '',
+    mobile: '',
     topic: '',
     message: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
+    // Egyptian mobile validation (01 followed by 9 digits)
+    const phoneRegex = /^01[0-9]{9}$/;
+    if (!phoneRegex.test(formData.mobile)) {
+      setError('يرجى إدخال رقم موبايل صحيح ');
+      return;
+    }
+
     setIsLoading(true);
 
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwiBZCpEcsS9tW40zuddZuW6rYskc2R2JpZxZ4xluK4TGSqkBf6lPQOJy6XiGVNNRQq/exec';
     const url = new URL(scriptURL);
-    
-    url.searchParams.append('name', currentUser?.name || currentUser?.email || '');
-    url.searchParams.append('email', currentUser?.email || '');
+
+    const submittedName = formData.name || currentUser?.name || currentUser?.email || '';
+    const submittedMobile = formData.mobile || '';
+    const submittedEmail = currentUser?.email || '';
+    const formattedDate = new Date().toLocaleString('ar-EG');
+
+    url.searchParams.append('type', 'ContactUs');
+    url.searchParams.append('name', submittedName);
+    url.searchParams.append('mobile', submittedMobile);
+    url.searchParams.append('phone', submittedMobile);
+    url.searchParams.append('email', submittedEmail);
+    url.searchParams.append('date', formattedDate);
     url.searchParams.append('topic', formData.topic);
     url.searchParams.append('message', formData.message);
 
     try {
-      // 1. Submit to Google Sheet via Google Apps Script (no-cors mode)
-      await fetch(url.toString(), {
-        method: 'GET',
-        mode: 'no-cors'
-      });
-
-      // 2. Record inquiry in Supabase inquiries table
-      try {
-        await supabase.from('inquiries').insert([
-          {
-            user_id: currentUser?.id,
-            email: currentUser?.email,
-            name: currentUser?.name || currentUser?.email,
-            topic: formData.topic,
-            message: formData.message
-          }
-        ]);
-      } catch (supaErr) {
-        console.log('Supabase inquiry save:', supaErr);
-      }
+      // Run Google Sheet backup and Supabase insert in parallel for speed
+      await Promise.all([
+        fetch(url.toString(), { method: 'GET', mode: 'no-cors' }),
+        supabase.from('inquiries').insert([{
+          user_id: currentUser?.id,
+          email: submittedEmail,
+          name: submittedName,
+          phone: submittedMobile,
+          mobile: submittedMobile,
+          topic: formData.topic,
+          message: formData.message
+        }])
+      ]);
 
       setIsSubmitted(true);
     } catch (err) {
@@ -175,7 +189,13 @@ export default function ContactUs({ themeMode, currentUser }) {
               <button
                 onClick={() => {
                   setIsSubmitted(false);
-                  setFormData({ topic: '', message: '' });
+                  setError('');
+                  setFormData({
+                    name: '',
+                    mobile: '',
+                    topic: '',
+                    message: ''
+                  });
                 }}
                 className="mt-4 px-6 py-2.5 rounded-xl font-bold bg-emerald-500 text-white shadow-md hover:bg-emerald-600 transition-all text-sm"
               >
@@ -189,7 +209,53 @@ export default function ContactUs({ themeMode, currentUser }) {
                 أرسل استفسارك
               </h2>
 
-              {/* Question 1: Topic Dropdown */}
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-xl text-center font-bold text-sm">
+                  {error}
+                </div>
+              )}
+
+              {/* Input 1: Name */}
+              <div className="space-y-2">
+                <label className="block text-sm font-bold flex items-center gap-2">
+                  <User size={16} className="text-emerald-500" />
+                  الاسم بالكامل
+                </label>
+                <input
+                  type="text"
+                  required
+                  dir="rtl"
+                  value={formData.name}
+                  onChange={(e) => {
+                    setError('');
+                    setFormData({ ...formData, name: e.target.value });
+                  }}
+                  placeholder="أدخل اسمك بالكامل..."
+                  className={`w-full px-4 py-3.5 text-right rounded-xl border focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all ${inputBg}`}
+                />
+              </div>
+
+              {/* Input 2: Mobile */}
+              <div className="space-y-2">
+                <label className="block text-sm font-bold flex items-center gap-2">
+                  <Phone size={16} className="text-emerald-500" />
+                  رقم الموبايل
+                </label>
+                <input
+                  type="tel"
+                  required
+                  dir="rtl"
+                  value={formData.mobile}
+                  onChange={(e) => {
+                    setError('');
+                    setFormData({ ...formData, mobile: e.target.value });
+                  }}
+                  placeholder="أدخل رقم الموبايل"
+                  className={`w-full px-4 py-3.5 text-right rounded-xl border focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all ${inputBg}`}
+                />
+              </div>
+
+              {/* Question 3: Topic Dropdown */}
               <div className="space-y-2">
                 <label className="block text-sm font-bold flex items-center gap-2">
                   <HelpCircle size={16} className="text-emerald-500" />
@@ -209,7 +275,7 @@ export default function ContactUs({ themeMode, currentUser }) {
                 </select>
               </div>
 
-              {/* Question 2: Message Textarea */}
+              {/* Question 4: Message Textarea */}
               <div className="space-y-2">
                 <label className="block text-sm font-bold flex items-center gap-2">
                   <MessageSquare size={16} className="text-emerald-500" />
@@ -231,7 +297,10 @@ export default function ContactUs({ themeMode, currentUser }) {
                 className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 text-base"
               >
                 {isLoading ? (
-                  <span>جاري إرسال الاستفسار...</span>
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>جاري إرسال الاستفسار...</span>
+                  </>
                 ) : (
                   <>
                     <Send size={18} />

@@ -38,12 +38,15 @@ function Login({ themeMode }) {
       }
     } catch (err) {
       console.error('Login error:', err);
-      if (err.message === 'Invalid login credentials') {
-         setError('البريد الإلكتروني أو كلمة المرور غير صحيحة.');
-      } else if (err.message === 'Email not confirmed') {
-         setError('يرجى تأكيد بريدك الإلكتروني أولاً من الرابط المرسل إلى بريدك الإلكتروني.');
+      const msg = typeof err === 'string' ? err : (err?.message || err?.error_description || '');
+      if (msg === 'Invalid login credentials') {
+        setError('البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+      } else if (msg === 'Email not confirmed') {
+        setError('يرجى تأكيد بريدك الإلكتروني أولاً من الرابط المرسل إلى بريدك الإلكتروني.');
+      } else if (msg.toLowerCase().includes('rate limit')) {
+        setError('لقد تجاوزت عدد محاولات الإرسال المسموح بها مؤقتاً. يرجى الانتظار القليل من الوقت.');
       } else {
-         setError(err.message || 'حدث خطأ أثناء تسجيل الدخول.');
+        setError(msg && msg !== '{}' ? msg : 'حدث خطأ أثناء تسجيل الدخول.');
       }
     } finally {
       setIsLoading(false);

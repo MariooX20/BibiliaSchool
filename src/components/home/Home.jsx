@@ -1,10 +1,6 @@
 import {
   Sparkles,
-  Copy,
-  BookmarkCheck,
-  Bookmark,
   ChevronLeft,
-  Users,
 } from "lucide-react";
 import heroBg from "../../assets/1.jpeg";
 import heroLogo from "../../assets/2.png";
@@ -30,15 +26,9 @@ const BIBLE_VERSES = [
   },
 ];
 
-function Home({
-  themeMode,
-  verseIndex,
-  isBookmarkedVerse,
-  setIsBookmarkedVerse,
-  handleCopyText,
-}) {
+function Home({ themeMode }) {
   const navigate = useNavigate();
-  const verse = BIBLE_VERSES[(verseIndex || 0) % BIBLE_VERSES.length];
+  const verse = BIBLE_VERSES[0];
 
   const renderVerseOfTheDay = () => (
     <div
@@ -56,26 +46,6 @@ function Home({
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold bg-gold-500/10 text-gold-600 border border-gold-500/20">
           <Sparkles size={14} className="text-gold-500" />
           <span>آية اليوم</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsBookmarkedVerse(!isBookmarkedVerse)}
-            className={`p-2.5 rounded-xl transition-all ${isBookmarkedVerse ? "text-gold-500 bg-gold-500/10" : "text-gray-400 hover:bg-black/5 hover:text-gray-600"}`}
-            title={isBookmarkedVerse ? "إلغاء الإشارة" : "إضافة إشارة"}
-          >
-            {isBookmarkedVerse ? (
-              <BookmarkCheck size={20} />
-            ) : (
-              <Bookmark size={20} />
-            )}
-          </button>
-          <button
-            onClick={() => handleCopyText(verse.text, verse.reference)}
-            className="p-2.5 rounded-xl text-gray-400 hover:bg-black/5 hover:text-gray-600 transition-all"
-            title="نسخ الآية"
-          >
-            <Copy size={20} />
-          </button>
         </div>
       </div>
 
@@ -129,8 +99,7 @@ function Home({
             </h1>
 
             <p className="text-lg md:text-xl max-w-xl leading-relaxed text-white/90 drop-shadow-md">
-              مدرسة الكتاب المقدس لسن اعدادي، هي مدرسة تهدف إلى تعلم الكتاب
-              المقدس بطرق مختلفة
+              مدرسة الكتاب المقدس لسن اعدادي، المدرسة تابعة لكنيسة العذراء العمرانية و اتاسست سنة ٢٠٢٥ 
             </p>
 
             {/* Mobile Logo: positioned below the text and above the button */}

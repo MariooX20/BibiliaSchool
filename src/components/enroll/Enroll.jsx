@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Loader2, CheckCircle2, User, Phone, FileText,
-  Calendar, Building, MapPin, GraduationCap, Heart
+  Calendar, Building, MapPin, GraduationCap, Heart, Clock
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -40,6 +40,11 @@ const INTERVIEW_SLOTS = [
 
 export default function Enroll({ themeMode, currentUser }) {
   const navigate = useNavigate();
+
+  // Check if enrollment has opened (August 10, 2026) — done first to skip fetch if closed
+  const openDate = new Date('2026-08-10T00:00:00');
+  const isEnrollmentOpen = new Date() >= openDate;
+
   const [formData, setFormData] = useState({
     name: '',
     gender: '',
@@ -50,7 +55,7 @@ export default function Enroll({ themeMode, currentUser }) {
     church: '',
     service: '',
     reason: '',
-    interviewData: '' 
+    interviewData: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -58,6 +63,9 @@ export default function Enroll({ themeMode, currentUser }) {
   const [slotCounts, setSlotCounts] = useState({});
 
   useEffect(() => {
+    // Skip slot fetch if enrollment isn't open yet — saves a network request
+    if (!isEnrollmentOpen) return;
+
     const fetchCounts = async () => {
       try {
         // 1. Query Supabase enrollments table for real-time slot counts
@@ -112,16 +120,13 @@ export default function Enroll({ themeMode, currentUser }) {
 
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwiBZCpEcsS9tW40zuddZuW6rYskc2R2JpZxZ4xluK4TGSqkBf6lPQOJy6XiGVNNRQq/exec';
     const url = new URL(scriptURL);
-    
+
     Object.keys(formData).forEach(key => {
       url.searchParams.append(key, formData[key]);
-      // Also add capitalized versions just in case the script expects them
-      url.searchParams.append(key.charAt(0).toUpperCase() + key.slice(1), formData[key]);
     });
 
     if (currentUser?.email) {
       url.searchParams.append('email', currentUser.email);
-      url.searchParams.append('Email', currentUser.email);
     }
 
     try {
@@ -165,6 +170,48 @@ export default function Enroll({ themeMode, currentUser }) {
       setIsLoading(false);
     }
   };
+
+  if (!isEnrollmentOpen) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-16 animate-fade-in px-4">
+        <div className={`relative overflow-hidden rounded-[2.5rem] border shadow-2xl p-10 md:p-16 transition-colors duration-500 ${
+          themeMode === 'dark' ? 'bg-deep-900/60 border-deep-800 text-gray-100' :
+          themeMode === 'sepia' ? 'bg-[#efe9d0]/70 border-[#dfd5b4] text-[#433422]' : 'bg-white/80 border-stone-200 text-stone-900'
+        }`}>
+          <div className="w-24 h-24 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-pulse">
+            <Clock size={48} />
+          </div>
+
+          <span className="inline-block px-4 py-1.5 mb-4 rounded-full text-xs font-black bg-amber-500/20 text-amber-600 dark:text-amber-400">
+            ⏳ قريباً
+          </span>
+
+          <h2 className="text-3xl md:text-4xl font-black mb-4">
+            التقديم يفتح يوم 10 أغسطس!
+          </h2>
+
+          <p className="opacity-80 text-base md:text-lg mb-8 max-w-lg mx-auto leading-relaxed">
+            لم يتم فتح باب التقديم لطلب الالتحاق بمدرسة الكتاب المقدس حتى الآن. سيتم فتح استمارة التقديم رسمياً يوم <strong>10 أغسطس (10/8)</strong>.
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <button
+              onClick={() => navigate('/')}
+              className="px-8 py-4 rounded-xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all inline-flex items-center gap-2"
+            >
+              العودة للرئيسية
+            </button>
+            <button
+              onClick={() => navigate('/contactus')}
+              className="px-8 py-4 rounded-xl font-bold border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all inline-flex items-center gap-2 hover:-translate-y-1"
+            >
+              تواصل معنا للاستفسار
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return (

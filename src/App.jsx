@@ -60,35 +60,39 @@ function App() {
       }
     };
 
-    // Get initial session
+    // Get initial session & handle recovery hash parameters
+    const handleUrlHash = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        if (hash.includes('type=recovery')) {
+          navigate('/reset-password');
+        } else if (hash.includes('otp_expired') || hash.includes('error_description')) {
+          navigate('/forgot-password?expired=true');
+        }
+      }
+    };
+
+    handleUrlHash();
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       fetchProfileAndSetUser(session?.user);
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       fetchProfileAndSetUser(session?.user);
+      if (event === 'PASSWORD_RECOVERY') {
+        navigate('/reset-password');
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setCurrentUser(null);
     navigate('/');
-  };
-
-  // ── Verse of the Day state ───────────────────────────────────────────────
-  const [verseIndex, setVerseIndex] = useState(0);
-  const [isBookmarkedVerse, setIsBookmarkedVerse] = useState(false);
-
-  /** Copy verse text + reference to clipboard */
-  const handleCopyText = (text, reference) => {
-    const content = `"${text}"\n— ${reference}`;
-    navigator.clipboard.writeText(content).catch((err) =>
-      console.error('Clipboard error:', err)
-    );
   };
 
   // ── Theme state ──────────────────────────────────────────────────────────
@@ -128,14 +132,7 @@ function App() {
       <main className="max-w-6xl mx-auto px-4 md:px-6 py-8 flex-1 w-full">
         <Routes>
           <Route path="/" element={
-            <Home
-              themeMode={themeMode}
-              verseIndex={verseIndex}
-              setVerseIndex={setVerseIndex}
-              isBookmarkedVerse={isBookmarkedVerse}
-              setIsBookmarkedVerse={setIsBookmarkedVerse}
-              handleCopyText={handleCopyText}
-            />
+            <Home themeMode={themeMode} />
           } />
 
           <Route path="/courses" element={<Courses currentUser={currentUser} />} />
