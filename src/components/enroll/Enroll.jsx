@@ -5,6 +5,7 @@ import {
   Calendar, Building, MapPin, GraduationCap, Heart, Clock
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 
 const INTERVIEW_SLOTS = [
   // الجمعة 21 أغسطس (كل 15 دقيقة من 5 مساءً حتى 8 مساءً)
@@ -38,8 +39,10 @@ const INTERVIEW_SLOTS = [
   "الجمعة 28 أغسطس - 8:00 مساءً",
 ];
 
-export default function Enroll({ themeMode, currentUser }) {
+export default function Enroll({ themeMode, currentUser: propUser }) {
   const navigate = useNavigate();
+  const { currentUser: authUser, refreshProfile } = useAuth();
+  const currentUser = authUser || propUser;
 
   // Check if enrollment has opened (August 10, 2026) — TEMPORARILY DISABLED FOR TESTING
   // const openDate = new Date('2026-08-10T00:00:00');
@@ -120,19 +123,16 @@ export default function Enroll({ themeMode, currentUser }) {
     setIsLoading(true);
 
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwiBZCpEcsS9tW40zuddZuW6rYskc2R2JpZxZ4xluK4TGSqkBf6lPQOJy6XiGVNNRQq/exec';
-    const url = new URL(scriptURL);
-
-    Object.keys(formData).forEach(key => {
-      url.searchParams.append(key, formData[key]);
+    
+    // Construct search params with URLSearchParams for proper UTF-8 Arabic encoding
+    const params = new URLSearchParams({
+      ...formData,
+      email: currentUser?.email || ''
     });
-
-    if (currentUser?.email) {
-      url.searchParams.append('email', currentUser.email);
-    }
 
     try {
       // 1. Send to Google Sheet in background (non-blocking)
-      fetch(url.toString(), {
+      fetch(`${scriptURL}?${params.toString()}`, {
         method: 'GET',
         mode: 'no-cors'
       }).catch(err => console.error('Google Sheet backup error:', err));
@@ -162,6 +162,11 @@ export default function Enroll({ themeMode, currentUser }) {
       }
 
       await Promise.all(supabaseTasks);
+
+      // 3. Immediately refresh auth context so currentUser.isEnrolled becomes true instantly
+      if (refreshProfile) {
+        await refreshProfile();
+      }
 
       setIsSuccess(true);
     } catch (err) {

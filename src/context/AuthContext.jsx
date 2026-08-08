@@ -93,8 +93,10 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED', 'INITIAL_SESSION'].includes(event)) {
+      if (['SIGNED_IN', 'SIGNED_OUT', 'INITIAL_SESSION'].includes(event)) {
         fetchProfileAndSetUser(session?.user);
+      } else if (event === 'USER_UPDATED') {
+        fetchProfileAndSetUser(session?.user, true);
       } else if (event === 'TOKEN_REFRESHED' && !lastFetchedUserIdRef.current) {
         fetchProfileAndSetUser(session?.user);
       }
