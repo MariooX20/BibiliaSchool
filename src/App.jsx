@@ -14,52 +14,13 @@ import ForgotPassword from './components/auth/ForgotPassword'
 import ResetPassword from './components/auth/ResetPassword'
 import Enroll from './components/enroll/Enroll'
 import { Routes, Route, useNavigate } from 'react-router-dom'
-import { supabase } from './lib/supabase'
+import { useAuth } from './context/AuthContext'
 
 function App() {
   const navigate = useNavigate();
-
-  // ── Auth state ───────────────────────────────────────────────────────────
-  const [currentUser, setCurrentUser] = useState(null);
+  const { currentUser, logout } = useAuth();
 
   useEffect(() => {
-    const fetchProfileAndSetUser = async (sessionUser) => {
-      if (!sessionUser) {
-        setCurrentUser(null);
-        return;
-      }
-      try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('auth_level, is_enrolled')
-          .eq('id', sessionUser.id)
-          .single();
-
-        const enrolledStatus = (profile && profile.is_enrolled !== undefined && profile.is_enrolled !== null)
-          ? profile.is_enrolled === true
-          : sessionUser.user_metadata?.is_enrolled === true;
-
-        setCurrentUser({
-          id: sessionUser.id,
-          email: sessionUser.email,
-          name: sessionUser.user_metadata?.name || sessionUser.email,
-          photoURL: sessionUser.user_metadata?.photoURL || null,
-          isEnrolled: enrolledStatus,
-          authLevel: profile?.auth_level || 0,
-        });
-      } catch (err) {
-        console.error('Error fetching profile:', err);
-        setCurrentUser({
-          id: sessionUser.id,
-          email: sessionUser.email,
-          name: sessionUser.user_metadata?.name || sessionUser.email,
-          photoURL: sessionUser.user_metadata?.photoURL || null,
-          isEnrolled: sessionUser.user_metadata?.is_enrolled === true,
-          authLevel: 0,
-        });
-      }
-    };
-
     // Get initial session & handle recovery hash parameters
     const handleUrlHash = () => {
       const hash = window.location.hash;
@@ -73,25 +34,10 @@ function App() {
     };
 
     handleUrlHash();
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      fetchProfileAndSetUser(session?.user);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      fetchProfileAndSetUser(session?.user);
-      if (event === 'PASSWORD_RECOVERY') {
-        navigate('/reset-password');
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setCurrentUser(null);
+    await logout();
     navigate('/');
   };
 
