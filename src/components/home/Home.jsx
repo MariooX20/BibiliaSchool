@@ -2,10 +2,10 @@ import {
   Sparkles,
   ChevronLeft,
 } from "lucide-react";
-import heroBg from "../../assets/1.jpeg";
-import heroLogo from "../../assets/2.png";
-import bannerBg from "../../assets/banner.jpeg";
-import peopleImg from "../../assets/people.png";
+import heroBg from "../../assets/1.webp";
+import heroLogo from "../../assets/2.webp";
+import bannerBg from "../../assets/banner.webp";
+import peopleImg from "../../assets/people.webp";
 import { useNavigate } from "react-router-dom";
 
 const BIBLE_VERSES = [
@@ -107,6 +107,9 @@ function Home({ themeMode }) {
               <img
                 src={heroLogo}
                 alt="Biblia School Logo"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 className="w-full max-w-[230px] sm:max-w-[290px] object-contain drop-shadow-2xl translate-y-2"
               />
             </div>
@@ -131,6 +134,9 @@ function Home({ themeMode }) {
             <img
               src={heroLogo}
               alt="Biblia School Logo"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
               className="w-full max-w-[260px] sm:max-w-[320px] lg:max-w-[380px] object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
             />
           </div>
@@ -175,6 +181,8 @@ function Home({ themeMode }) {
             <img
               src={peopleImg}
               alt="Students"
+              loading="lazy"
+              decoding="async"
               className="w-full max-w-[360px] sm:max-w-[460px] md:max-w-[560px] lg:max-w-[850px] xl:max-w-[980px] object-contain drop-shadow-2xl mx-0 -ml-6 sm:-ml-12 lg:-ml-52 xl:-ml-72 -translate-x-16 sm:-translate-x-24 md:-translate-x-36 lg:-translate-x-56 xl:-translate-x-72 mb-0 lg:-mb-16 scale-[1.35] sm:scale-[1.5] lg:scale-[1.8] xl:scale-[2] origin-bottom-left translate-y-8 sm:translate-y-10 md:translate-y-14 lg:translate-y-18 xl:translate-y-20"
             />
           </div>

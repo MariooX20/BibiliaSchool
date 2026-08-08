@@ -3,7 +3,7 @@ import { UserRound, Sparkles } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react'
 import SignUpModal from '../auth/SignUpModal'
 import { useNavigate, useLocation } from 'react-router-dom'
-import logo from "../../assets/2.png";
+import logo from "../../assets/2.webp";
 
 function Header({
   themeMode,
@@ -41,7 +41,7 @@ function Header({
         <div className="max-w-6xl mx-auto px-4 md:px-6 h-20 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-            <img src={logo} alt="Biblia School Logo" className="w-auto h-14 md:h-16 lg:h-18 object-contain drop-shadow-md hover:scale-105 transition-transform" />
+            <img src={logo} alt="Biblia School Logo" loading="eager" fetchPriority="high" decoding="async" className="w-auto h-14 md:h-16 lg:h-18 object-contain drop-shadow-md hover:scale-105 transition-transform" />
           </div>
 
           {/* Desktop Navigation */}
@@ -97,7 +97,7 @@ function Header({
                     className="w-10 h-10 rounded-full border-2 border-gold-500 overflow-hidden focus:outline-none focus:ring-2 focus:ring-gold-400 transition-all shadow-sm"
                   >
                     {currentUser.photoURL ? (
-                      <img src={currentUser.photoURL} alt={currentUser.name} className="w-full h-full object-cover" />
+                      <img src={currentUser.photoURL} alt={currentUser.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-tr from-gold-600 to-amber-400 flex items-center justify-center text-white font-bold">
                         {currentUser.name ? <UserRound /> : <User size={20} />}
@@ -204,7 +204,7 @@ function Header({
                <div className="flex items-center gap-3 bg-stone-100 dark:bg-deep-900 p-4 rounded-2xl mb-2 border border-stone-200 dark:border-stone-800">
                  <div className="w-12 h-12 rounded-full border-2 border-gold-500 overflow-hidden flex-shrink-0">
                     {currentUser.photoURL ? (
-                      <img src={currentUser.photoURL} alt={currentUser.name} className="w-full h-full object-cover" />
+                      <img src={currentUser.photoURL} alt={currentUser.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-tr from-gold-600 to-amber-400 flex items-center justify-center text-white font-bold text-lg">
                         {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : <User size={24} />}

@@ -41,9 +41,10 @@ const INTERVIEW_SLOTS = [
 export default function Enroll({ themeMode, currentUser }) {
   const navigate = useNavigate();
 
-  // Check if enrollment has opened (August 10, 2026) — done first to skip fetch if closed
-  const openDate = new Date('2026-08-10T00:00:00');
-  const isEnrollmentOpen = new Date() >= openDate;
+  // Check if enrollment has opened (August 10, 2026) — TEMPORARILY DISABLED FOR TESTING
+  // const openDate = new Date('2026-08-10T00:00:00');
+  // const isEnrollmentOpen = new Date() >= openDate;
+  const isEnrollmentOpen = true;
 
   const [formData, setFormData] = useState({
     name: '',
@@ -171,6 +172,7 @@ export default function Enroll({ themeMode, currentUser }) {
     }
   };
 
+  /* TEMPORARILY COMMENTED OUT FOR TESTING (10/8 Banner)
   if (!isEnrollmentOpen) {
     return (
       <div className="max-w-4xl mx-auto text-center py-16 animate-fade-in px-4">
@@ -212,6 +214,7 @@ export default function Enroll({ themeMode, currentUser }) {
       </div>
     );
   }
+  */
 
   if (!currentUser) {
     return (

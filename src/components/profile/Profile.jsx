@@ -140,7 +140,7 @@ const Profile = ({ themeMode, currentUser }) => {
               }`}
             >
               {currentUser.photoURL ? (
-                <img src={currentUser.photoURL} alt={currentUser.name} className="w-full h-full object-cover" />
+                <img src={currentUser.photoURL} alt={currentUser.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               ) : (
                 <UserRound size={48} />
               )}
