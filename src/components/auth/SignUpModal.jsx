@@ -26,10 +26,14 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
     setError('');
 
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwiBZCpEcsS9tW40zuddZuW6rYskc2R2JpZxZ4xluK4TGSqkBf6lPQOJy6XiGVNNRQq/exec';
-    const url = new URL(scriptURL);
-    url.searchParams.append('name', formData.name);
-    url.searchParams.append('email', formData.email);
-    url.searchParams.append('password', formData.password);
+    
+    // Construct search params with URLSearchParams for proper UTF-8 Arabic encoding
+    const params = new URLSearchParams({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      type: 'signup'
+    });
 
     try {
       // 1. Sign up with Supabase
@@ -41,19 +45,19 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
 
       if (signUpError) throw signUpError;
 
-      // 2. Insert into profiles table (non-blocking on failure)
+      // 2. Insert/Upsert into profiles table (non-blocking on failure)
       if (data?.user) {
-        supabase.from('profiles').insert([{
+        supabase.from('profiles').upsert([{
           id: data.user.id,
           email: formData.email,
           name: formData.name
-        }]).then(({ error: profileError }) => {
+        }], { onConflict: 'id' }).then(({ error: profileError }) => {
           if (profileError) console.error('Profile insert error:', profileError);
         });
       }
 
       // 3. Backup to Google Script — fire and forget (no await needed)
-      fetch(url.toString(), { method: 'GET', mode: 'no-cors' })
+      fetch(`${scriptURL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' })
         .catch(err => console.error('Google Script Backup Error:', err));
 
       setIsSuccess(true);
