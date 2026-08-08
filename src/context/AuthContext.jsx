@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
     }
 
     // Prevent duplicate network calls for the same user unless forced
-    if (!forceRefresh && lastFetchedUserIdRef.current === sessionUser.id) {
+    if (!forceRefresh && lastFetchedUserIdRef.current === sessionUser.id && currentUser?.id === sessionUser.id) {
       setLoading(false);
       return currentUser;
     }
