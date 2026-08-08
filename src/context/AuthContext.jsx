@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext({
@@ -11,19 +11,29 @@ const AuthContext = createContext({
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const lastFetchedUserIdRef = useRef(null);
 
-  const fetchProfileAndSetUser = async (sessionUser) => {
+  const fetchProfileAndSetUser = async (sessionUser, forceRefresh = false) => {
     if (!sessionUser) {
+      lastFetchedUserIdRef.current = null;
       setCurrentUser(null);
       setLoading(false);
       return null;
     }
+
+    // Prevent duplicate network calls for the same user unless forced
+    if (!forceRefresh && lastFetchedUserIdRef.current === sessionUser.id) {
+      setLoading(false);
+      return currentUser;
+    }
+
     try {
+      lastFetchedUserIdRef.current = sessionUser.id;
       const { data: profile } = await supabase
         .from('profiles')
         .select('auth_level, is_enrolled')
         .eq('id', sessionUser.id)
-        .single();
+        .maybeSingle();
 
       const enrolledStatus = (profile && profile.is_enrolled !== undefined && profile.is_enrolled !== null)
         ? profile.is_enrolled === true
@@ -58,14 +68,14 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      fetchProfileAndSetUser(session?.user);
-    });
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      fetchProfileAndSetUser(session?.user);
+    // Listen for auth state changes (Supabase v2 handles initial session automatically via INITIAL_SESSION)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Filter events to prevent duplicate profile fetches
+      if (['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED', 'INITIAL_SESSION'].includes(event)) {
+        fetchProfileAndSetUser(session?.user);
+      } else if (event === 'TOKEN_REFRESHED' && !lastFetchedUserIdRef.current) {
+        fetchProfileAndSetUser(session?.user);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -77,13 +87,14 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
+      lastFetchedUserIdRef.current = null;
       setCurrentUser(null);
     }
   };
 
   const refreshProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    return await fetchProfileAndSetUser(session?.user);
+    return await fetchProfileAndSetUser(session?.user, true);
   };
 
   return (
