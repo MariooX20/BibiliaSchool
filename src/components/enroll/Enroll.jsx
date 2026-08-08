@@ -129,27 +129,38 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
       ...formData,
       email: currentUser?.email || ''
     });
+    const payloadString = params.toString();
 
     try {
-      // 1. Send to Google Sheet in background (non-blocking)
-      fetch(`${scriptURL}?${params.toString()}`, {
+      // 1. Send to Google Sheet in background (supporting both POST & GET for Google Apps Script)
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: payloadString
+      }).catch(err => console.error('Google Sheet POST error:', err));
+
+      fetch(`${scriptURL}?${payloadString}`, {
         method: 'GET',
         mode: 'no-cors'
-      }).catch(err => console.error('Google Sheet backup error:', err));
+      }).catch(err => console.error('Google Sheet GET error:', err));
 
-      // 2. Perform Supabase updates in parallel for instant submission speed
+      // 2. Perform Supabase updates in parallel (using upsert so re-testing works smoothly)
       const supabaseTasks = [
         supabase.auth.updateUser({
           data: { is_enrolled: true }
         }),
-        supabase.from('enrollments').insert([
-          {
-            user_id: currentUser?.id,
-            email: currentUser?.email,
-            phone: formData.phone,
-            interview_slot: formData.interviewData
-          }
-        ])
+        supabase.from('enrollments').upsert(
+          [
+            {
+              user_id: currentUser?.id,
+              email: currentUser?.email,
+              phone: formData.phone,
+              interview_slot: formData.interviewData
+            }
+          ],
+          { onConflict: 'user_id' }
+        )
       ];
 
       if (currentUser?.id) {
