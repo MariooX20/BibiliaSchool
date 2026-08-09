@@ -134,20 +134,9 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
     const payloadString = params.toString();
 
     try {
-      // 1. Send to Google Sheet in background (supporting both POST & GET for Google Apps Script)
-      fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-        body: payloadString
-      }).catch(err => console.error('Google Sheet POST error:', err));
-
-      fetch(`${scriptURL}?${payloadString}`, {
-        method: 'GET',
-        mode: 'no-cors'
-      }).catch(err => console.error('Google Sheet GET error:', err));
-
-      // 2. Perform Supabase updates with explicit error checking and fallback
+      // 1. Perform the Supabase write FIRST and make sure it actually succeeds.
+      //    This is the source of truth — if this fails, nothing else should happen
+      //    and the user must see an error, not a fake success screen.
       const enrollmentPayload = {
         user_id: currentUser.id,
         email: currentUser.email || '',
@@ -155,24 +144,47 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
         interview_slot: formData.interviewData
       };
 
-      // Try upsert first (so re-testing works)
-      let { error: enrollErr } = await supabase
+      let enrollmentSaved = false;
+
+      // Try upsert first (works now that enrollments.user_id has a unique constraint,
+      // so re-submitting updates the existing row instead of creating duplicates)
+      const { error: enrollErr } = await supabase
         .from('enrollments')
         .upsert([enrollmentPayload], { onConflict: 'user_id' });
 
-      // Fallback to simple insert if upsert fails (e.g. if ON CONFLICT update policy or unique constraint is missing in Supabase RLS)
-      if (enrollErr) {
-        console.warn('Enrollments upsert returned an error, trying insert fallback:', enrollErr);
+      if (!enrollErr) {
+        enrollmentSaved = true;
+      } else {
+        console.warn('Enrollments upsert failed, trying insert fallback:', enrollErr);
         const { error: insertErr } = await supabase
           .from('enrollments')
           .insert([enrollmentPayload]);
-        
-        if (insertErr) {
+
+        if (!insertErr) {
+          enrollmentSaved = true;
+        } else {
           console.error('Enrollments insert fallback also failed:', insertErr);
         }
       }
 
-      // Update user metadata & profiles table
+      // If we couldn't save the enrollment anywhere, stop here. Do NOT mark the
+      // user as enrolled and do NOT show the success screen.
+      if (!enrollmentSaved) {
+        setError('حدث خطأ أثناء حفظ بياناتك، يرجى المحاولة مرة أخرى. لو استمرت المشكلة، تواصل معنا.');
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Only now that the real record is safely stored, send a best-effort
+      //    copy to the Google Sheet (non-blocking, failures here don't matter).
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: payloadString
+      }).catch(err => console.error('Google Sheet POST error:', err));
+
+      // 3. Update user metadata & profiles table now that we know enrollment succeeded
       const authTask = supabase.auth.updateUser({
         data: { is_enrolled: true }
       });
@@ -182,9 +194,16 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
         .update({ is_enrolled: true })
         .eq('id', currentUser.id);
 
-      await Promise.all([authTask, profileTask]);
+      const [authResult, profileResult] = await Promise.all([authTask, profileTask]);
 
-      // 3. Immediately refresh auth context so currentUser.isEnrolled becomes true instantly
+      if (authResult?.error) {
+        console.error('Failed to update auth metadata:', authResult.error);
+      }
+      if (profileResult?.error) {
+        console.error('Failed to update profile:', profileResult.error);
+      }
+
+      // 4. Immediately refresh auth context so currentUser.isEnrolled becomes true instantly
       if (refreshProfile) {
         await refreshProfile();
       }
