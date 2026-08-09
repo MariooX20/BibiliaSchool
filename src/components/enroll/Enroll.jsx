@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Loader2, CheckCircle2, User, Phone, FileText,
-  Calendar, Building, MapPin, GraduationCap, Heart, Clock
+  Calendar, Building, MapPin, GraduationCap, Heart
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
@@ -44,9 +44,6 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
   const { currentUser: authUser, refreshProfile } = useAuth();
   const currentUser = authUser || propUser;
 
-  // Check if enrollment has opened (August 10, 2026) — TEMPORARILY DISABLED FOR TESTING
-  // const openDate = new Date('2026-08-10T00:00:00');
-  // const isEnrollmentOpen = new Date() >= openDate;
   const isEnrollmentOpen = true;
 
   const [formData, setFormData] = useState({
@@ -113,6 +110,11 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
     e.preventDefault();
     setError('');
 
+    if (!currentUser?.id) {
+      setError('حدث خطأ في جلسة المستخدم، يرجى إعادة تسجيل الدخول والمحاولة مرة أخرى.');
+      return;
+    }
+
     // Phone validation (Egyptian numbers: 01 + 9 digits)
     const phoneRegex = /^01[0-9]{9}$/;
     if (!phoneRegex.test(formData.phone)) {
@@ -145,34 +147,42 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
         mode: 'no-cors'
       }).catch(err => console.error('Google Sheet GET error:', err));
 
-      // 2. Perform Supabase updates in parallel (using upsert so re-testing works smoothly)
-      const supabaseTasks = [
-        supabase.auth.updateUser({
-          data: { is_enrolled: true }
-        }),
-        supabase.from('enrollments').upsert(
-          [
-            {
-              user_id: currentUser?.id,
-              email: currentUser?.email,
-              phone: formData.phone,
-              interview_slot: formData.interviewData
-            }
-          ],
-          { onConflict: 'user_id' }
-        )
-      ];
+      // 2. Perform Supabase updates with explicit error checking and fallback
+      const enrollmentPayload = {
+        user_id: currentUser.id,
+        email: currentUser.email || '',
+        phone: formData.phone,
+        interview_slot: formData.interviewData
+      };
 
-      if (currentUser?.id) {
-        supabaseTasks.push(
-          supabase
-            .from('profiles')
-            .update({ is_enrolled: true })
-            .eq('id', currentUser.id)
-        );
+      // Try upsert first (so re-testing works)
+      let { error: enrollErr } = await supabase
+        .from('enrollments')
+        .upsert([enrollmentPayload], { onConflict: 'user_id' });
+
+      // Fallback to simple insert if upsert fails (e.g. if ON CONFLICT update policy or unique constraint is missing in Supabase RLS)
+      if (enrollErr) {
+        console.warn('Enrollments upsert returned an error, trying insert fallback:', enrollErr);
+        const { error: insertErr } = await supabase
+          .from('enrollments')
+          .insert([enrollmentPayload]);
+        
+        if (insertErr) {
+          console.error('Enrollments insert fallback also failed:', insertErr);
+        }
       }
 
-      await Promise.all(supabaseTasks);
+      // Update user metadata & profiles table
+      const authTask = supabase.auth.updateUser({
+        data: { is_enrolled: true }
+      });
+
+      const profileTask = supabase
+        .from('profiles')
+        .update({ is_enrolled: true })
+        .eq('id', currentUser.id);
+
+      await Promise.all([authTask, profileTask]);
 
       // 3. Immediately refresh auth context so currentUser.isEnrolled becomes true instantly
       if (refreshProfile) {
@@ -188,49 +198,7 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
     }
   };
 
-  /* TEMPORARILY COMMENTED OUT FOR TESTING (10/8 Banner)
-  if (!isEnrollmentOpen) {
-    return (
-      <div className="max-w-4xl mx-auto text-center py-16 animate-fade-in px-4">
-        <div className={`relative overflow-hidden rounded-[2.5rem] border shadow-2xl p-10 md:p-16 transition-colors duration-500 ${
-          themeMode === 'dark' ? 'bg-deep-900/60 border-deep-800 text-gray-100' :
-          themeMode === 'sepia' ? 'bg-[#efe9d0]/70 border-[#dfd5b4] text-[#433422]' : 'bg-white/80 border-stone-200 text-stone-900'
-        }`}>
-          <div className="w-24 h-24 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-pulse">
-            <Clock size={48} />
-          </div>
 
-          <span className="inline-block px-4 py-1.5 mb-4 rounded-full text-xs font-black bg-amber-500/20 text-amber-600 dark:text-amber-400">
-            ⏳ قريباً
-          </span>
-
-          <h2 className="text-3xl md:text-4xl font-black mb-4">
-            التقديم يفتح يوم 10 أغسطس!
-          </h2>
-
-          <p className="opacity-80 text-base md:text-lg mb-8 max-w-lg mx-auto leading-relaxed">
-            لم يتم فتح باب التقديم لطلب الالتحاق بمدرسة الكتاب المقدس حتى الآن. سيتم فتح استمارة التقديم رسمياً يوم <strong>10 أغسطس (10/8)</strong>.
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <button
-              onClick={() => navigate('/')}
-              className="px-8 py-4 rounded-xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all inline-flex items-center gap-2"
-            >
-              العودة للرئيسية
-            </button>
-            <button
-              onClick={() => navigate('/contactus')}
-              className="px-8 py-4 rounded-xl font-bold border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all inline-flex items-center gap-2 hover:-translate-y-1"
-            >
-              تواصل معنا للاستفسار
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  */
 
   if (!currentUser) {
     return (
