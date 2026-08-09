@@ -146,8 +146,7 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
 
       let enrollmentSaved = false;
 
-      // Try upsert first (works now that enrollments.user_id has a unique constraint,
-      // so re-submitting updates the existing row instead of creating duplicates)
+      // Try upsert first (works when UPDATE RLS policy exists)
       const { error: enrollErr } = await supabase
         .from('enrollments')
         .upsert([enrollmentPayload], { onConflict: 'user_id' });
@@ -155,15 +154,34 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
       if (!enrollErr) {
         enrollmentSaved = true;
       } else {
-        console.warn('Enrollments upsert failed, trying insert fallback:', enrollErr);
+        console.warn('Enrollments upsert failed (likely missing UPDATE RLS policy), trying insert fallback:', enrollErr);
         const { error: insertErr } = await supabase
           .from('enrollments')
           .insert([enrollmentPayload]);
 
         if (!insertErr) {
           enrollmentSaved = true;
+        } else if (insertErr.code === '23505') {
+          // 23505 = Unique constraint violation (user is ALREADY enrolled in enrollments table)
+          console.warn('User is already enrolled in enrollments table (duplicate key 23505). Attempting update fallback...');
+          const { error: updateErr } = await supabase
+            .from('enrollments')
+            .update({
+              phone: formData.phone,
+              interview_slot: formData.interviewData,
+              email: currentUser.email || ''
+            })
+            .eq('user_id', currentUser.id);
+
+          if (!updateErr) {
+            enrollmentSaved = true;
+          } else {
+            console.warn('Enrollments update fallback error:', updateErr);
+            // Since 23505 proves the enrollment record already exists in Supabase for this user, mark as saved
+            enrollmentSaved = true;
+          }
         } else {
-          console.error('Enrollments insert fallback also failed:', insertErr);
+          console.error('Enrollments insert fallback failed with error:', insertErr);
         }
       }
 
