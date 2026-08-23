@@ -39,6 +39,37 @@ const INTERVIEW_SLOTS = [
   "الجمعة 28 أغسطس - 8:00 مساءً",
 ];
 
+// Helper to check if an interview slot datetime has passed
+const isSlotExpired = (slotLabel) => {
+  try {
+    const year = 2026;
+    const month = 7; // August (0-indexed)
+    let day = null;
+    if (slotLabel.includes('21 أغسطس')) day = 21;
+    else if (slotLabel.includes('28 أغسطس')) day = 28;
+
+    if (!day) return false;
+
+    const timeMatch = slotLabel.match(/(\d+):(\d+)\s*(مساءً|صباحاً)/);
+    if (!timeMatch) return false;
+
+    let hour = parseInt(timeMatch[1], 10);
+    const minute = parseInt(timeMatch[2], 10);
+    const period = timeMatch[3];
+
+    if (period === 'مساءً' && hour < 12) {
+      hour += 12;
+    } else if (period === 'صباحاً' && hour === 12) {
+      hour = 0;
+    }
+
+    const slotDate = new Date(year, month, day, hour, minute);
+    return slotDate < new Date();
+  } catch (err) {
+    return false;
+  }
+};
+
 export default function Enroll({ themeMode, currentUser: propUser }) {
   const navigate = useNavigate();
   const { currentUser: authUser, refreshProfile } = useAuth();
@@ -119,6 +150,11 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
     const phoneRegex = /^01[0-9]{9}$/;
     if (!phoneRegex.test(formData.phone)) {
       setError('يرجى إدخال رقم موبايل مصري صحيح (مثال: 01xxxxxxxxx)');
+      return;
+    }
+
+    if (isSlotExpired(formData.interviewData)) {
+      setError('الموعد الذي اخترته قد انتهى، يرجى اختيار موعد آخر متاح.');
       return;
     }
 
@@ -472,29 +508,47 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
                 >
                   <option value="" disabled>اختر ميعاد مناسب لك...</option>
 
-                  <optgroup label="📅 الجمعة 21 أغسطس">
-                    {INTERVIEW_SLOTS.filter(slot => slot.startsWith("الجمعة 21 أغسطس")).map((slot) => {
-                      const count = slotCounts[slot] || 0;
-                      const isFull = count >= 6;
-                      return (
-                        <option key={slot} value={slot} disabled={isFull}>
-                          {slot} {isFull ? '❌ (مكتمل - 6/6)' : count > 0 ? `(${6 - count} أماكن متبقية)` : ''}
-                        </option>
-                      );
-                    })}
-                  </optgroup>
+                  {(() => {
+                    const slotsGroup1 = INTERVIEW_SLOTS.filter(slot => slot.startsWith("الجمعة 21 أغسطس") && !isSlotExpired(slot));
+                    const slotsGroup2 = INTERVIEW_SLOTS.filter(slot => slot.startsWith("الجمعة 28 أغسطس") && !isSlotExpired(slot));
+                    const hasAvailableSlots = slotsGroup1.length > 0 || slotsGroup2.length > 0;
 
-                  <optgroup label="📅 الجمعة 28 أغسطس">
-                    {INTERVIEW_SLOTS.filter(slot => slot.startsWith("الجمعة 28 أغسطس")).map((slot) => {
-                      const count = slotCounts[slot] || 0;
-                      const isFull = count >= 6;
-                      return (
-                        <option key={slot} value={slot} disabled={isFull}>
-                          {slot} {isFull ? '❌ (مكتمل - 6/6)' : count > 0 ? `(${6 - count} أماكن متبقية)` : ''}
-                        </option>
-                      );
-                    })}
-                  </optgroup>
+                    if (!hasAvailableSlots) {
+                      return <option value="" disabled>لا توجد مواعيد متاحة حالياً</option>;
+                    }
+
+                    return (
+                      <>
+                        {slotsGroup1.length > 0 && (
+                          <optgroup label="📅 الجمعة 21 أغسطس">
+                            {slotsGroup1.map((slot) => {
+                              const count = slotCounts[slot] || 0;
+                              const isFull = count >= 6;
+                              return (
+                                <option key={slot} value={slot} disabled={isFull}>
+                                  {slot} {isFull ? '❌ (مكتمل - 6/6)' : count > 0 ? `(${6 - count} أماكن متبقية)` : ''}
+                                </option>
+                              );
+                            })}
+                          </optgroup>
+                        )}
+
+                        {slotsGroup2.length > 0 && (
+                          <optgroup label="📅 الجمعة 28 أغسطس">
+                            {slotsGroup2.map((slot) => {
+                              const count = slotCounts[slot] || 0;
+                              const isFull = count >= 6;
+                              return (
+                                <option key={slot} value={slot} disabled={isFull}>
+                                  {slot} {isFull ? '❌ (مكتمل - 6/6)' : count > 0 ? `(${6 - count} أماكن متبقية)` : ''}
+                                </option>
+                              );
+                            })}
+                          </optgroup>
+                        )}
+                      </>
+                    );
+                  })()}
                 </select>
               </div>
 

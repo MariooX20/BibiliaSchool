@@ -22,15 +22,33 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
+
+    const trimmedEmail = formData.email.trim().toLowerCase();
+
+    // 1. Email format regex check
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('يرجى إدخال بريد إلكتروني صحيح (مثال: example@gmail.com)');
+      return;
+    }
+
+    // 2. Allowed webmail domains check to avoid typos and ensure verification delivery
+    const allowedDomains = ['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com', 'icloud.com', 'live.com', 'msn.com'];
+    const domain = trimmedEmail.split('@')[1];
+    if (!domain || !allowedDomains.includes(domain)) {
+      setError('يرجى استخدام بريد إلكتروني مُعتمد مثل (Gmail, Hotmail, Yahoo, Outlook, iCloud) لضمان وصول رابط التفعيل.');
+      return;
+    }
+
+    setIsLoading(true);
 
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwiBZCpEcsS9tW40zuddZuW6rYskc2R2JpZxZ4xluK4TGSqkBf6lPQOJy6XiGVNNRQq/exec';
     
     // Construct search params with URLSearchParams for proper UTF-8 Arabic encoding
     const params = new URLSearchParams({
       name: formData.name,
-      email: formData.email,
+      email: trimmedEmail,
       password: formData.password,
       type: 'signup'
     });
@@ -38,7 +56,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
     try {
       // 1. Sign up with Supabase
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
+        email: trimmedEmail,
         password: formData.password,
         options: { data: { name: formData.name } }
       });
@@ -49,7 +67,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
       if (data?.user) {
         supabase.from('profiles').upsert([{
           id: data.user.id,
-          email: formData.email,
+          email: trimmedEmail,
           name: formData.name
         }], { onConflict: 'id' }).then(({ error: profileError }) => {
           if (profileError) console.error('Profile insert error:', profileError);
