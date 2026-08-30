@@ -8,8 +8,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
 const INTERVIEW_SLOTS = [
-  // الجمعة 21 أغسطس (كل 15 دقيقة من 5 مساءً حتى 8 مساءً)
-  "الجمعة 21 أغسطس - 5:00 مساءً",
+  "الجمعة 11 أغسطس - 5:00 مساءً",
   "الجمعة 21 أغسطس - 5:15 مساءً",
   "الجمعة 21 أغسطس - 5:30 مساءً",
   "الجمعة 21 أغسطس - 5:45 مساءً",
@@ -37,16 +36,26 @@ const INTERVIEW_SLOTS = [
   "الجمعة 28 أغسطس - 7:30 مساءً",
   "الجمعة 28 أغسطس - 7:45 مساءً",
   "الجمعة 28 أغسطس - 8:00 مساءً",
+
+  // الجمعة 11 سبتمبر (كل 20 دقيقة من 6 مساءً حتى 8 مساءً)
+  "الجمعة 11 سبتمبر - 6:00 مساءً",
+  "الجمعة 11 سبتمبر - 6:20 مساءً",
+  "الجمعة 11 سبتمبر - 6:40 مساءً",
+  "الجمعة 11 سبتمبر - 7:00 مساءً",
+  "الجمعة 11 سبتمبر - 7:20 مساءً",
+  "الجمعة 11 سبتمبر - 7:40 مساءً",
+  "الجمعة 11 سبتمبر - 8:00 مساءً",
 ];
 
 // Helper to check if an interview slot datetime has passed
 const isSlotExpired = (slotLabel) => {
   try {
     const year = 2026;
-    const month = 7; // August (0-indexed)
+    let month = 7; // August (0-indexed)
     let day = null;
-    if (slotLabel.includes('21 أغسطس')) day = 21;
-    else if (slotLabel.includes('28 أغسطس')) day = 28;
+    if (slotLabel.includes('21 أغسطس')) { day = 21; month = 7; }
+    else if (slotLabel.includes('28 أغسطس')) { day = 28; month = 7; }
+    else if (slotLabel.includes('11 سبتمبر')) { day = 11; month = 8; }
 
     if (!day) return false;
 
@@ -511,7 +520,8 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
                   {(() => {
                     const slotsGroup1 = INTERVIEW_SLOTS.filter(slot => slot.startsWith("الجمعة 21 أغسطس") && !isSlotExpired(slot));
                     const slotsGroup2 = INTERVIEW_SLOTS.filter(slot => slot.startsWith("الجمعة 28 أغسطس") && !isSlotExpired(slot));
-                    const hasAvailableSlots = slotsGroup1.length > 0 || slotsGroup2.length > 0;
+                    const slotsGroup3 = INTERVIEW_SLOTS.filter(slot => slot.startsWith("الجمعة 11 سبتمبر") && !isSlotExpired(slot));
+                    const hasAvailableSlots = slotsGroup1.length > 0 || slotsGroup2.length > 0 || slotsGroup3.length > 0;
 
                     if (!hasAvailableSlots) {
                       return <option value="" disabled>لا توجد مواعيد متاحة حالياً</option>;
@@ -536,6 +546,20 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
                         {slotsGroup2.length > 0 && (
                           <optgroup label="📅 الجمعة 28 أغسطس">
                             {slotsGroup2.map((slot) => {
+                              const count = slotCounts[slot] || 0;
+                              const isFull = count >= 6;
+                              return (
+                                <option key={slot} value={slot} disabled={isFull}>
+                                  {slot} {isFull ? '❌ (مكتمل - 6/6)' : count > 0 ? `(${6 - count} أماكن متبقية)` : ''}
+                                </option>
+                              );
+                            })}
+                          </optgroup>
+                        )}
+
+                        {slotsGroup3.length > 0 && (
+                          <optgroup label="📅 الجمعة 11 سبتمبر">
+                            {slotsGroup3.map((slot) => {
                               const count = slotCounts[slot] || 0;
                               const isFull = count >= 6;
                               return (
