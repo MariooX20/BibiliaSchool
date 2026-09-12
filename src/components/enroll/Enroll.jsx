@@ -45,6 +45,42 @@ const INTERVIEW_SLOTS = [
   "الجمعة 11 سبتمبر - 7:20 مساءً",
   "الجمعة 11 سبتمبر - 7:40 مساءً",
   "الجمعة 11 سبتمبر - 8:00 مساءً",
+
+  // الاثنين 14 سبتمبر (كل 20 دقيقة من 7 مساءً حتى 9 مساءً)
+  "الاثنين 14 سبتمبر - 7:00 مساءً",
+  "الاثنين 14 سبتمبر - 7:20 مساءً",
+  "الاثنين 14 سبتمبر - 7:40 مساءً",
+  "الاثنين 14 سبتمبر - 8:00 مساءً",
+  "الاثنين 14 سبتمبر - 8:20 مساءً",
+  "الاثنين 14 سبتمبر - 8:40 مساءً",
+  "الاثنين 14 سبتمبر - 9:00 مساءً",
+
+  // الثلاثاء 15 سبتمبر (كل 20 دقيقة من 7 مساءً حتى 9 مساءً)
+  "الثلاثاء 15 سبتمبر - 7:00 مساءً",
+  "الثلاثاء 15 سبتمبر - 7:20 مساءً",
+  "الثلاثاء 15 سبتمبر - 7:40 مساءً",
+  "الثلاثاء 15 سبتمبر - 8:00 مساءً",
+  "الثلاثاء 15 سبتمبر - 8:20 مساءً",
+  "الثلاثاء 15 سبتمبر - 8:40 مساءً",
+  "الثلاثاء 15 سبتمبر - 9:00 مساءً",
+
+  // الاثنين 21 سبتمبر (كل 20 دقيقة من 7 مساءً حتى 9 مساءً)
+  "الاثنين 21 سبتمبر - 7:00 مساءً",
+  "الاثنين 21 سبتمبر - 7:20 مساءً",
+  "الاثنين 21 سبتمبر - 7:40 مساءً",
+  "الاثنين 21 سبتمبر - 8:00 مساءً",
+  "الاثنين 21 سبتمبر - 8:20 مساءً",
+  "الاثنين 21 سبتمبر - 8:40 مساءً",
+  "الاثنين 21 سبتمبر - 9:00 مساءً",
+
+  // الثلاثاء 22 سبتمبر (كل 20 دقيقة من 7 مساءً حتى 9 مساءً)
+  "الثلاثاء 22 سبتمبر - 7:00 مساءً",
+  "الثلاثاء 22 سبتمبر - 7:20 مساءً",
+  "الثلاثاء 22 سبتمبر - 7:40 مساءً",
+  "الثلاثاء 22 سبتمبر - 8:00 مساءً",
+  "الثلاثاء 22 سبتمبر - 8:20 مساءً",
+  "الثلاثاء 22 سبتمبر - 8:40 مساءً",
+  "الثلاثاء 22 سبتمبر - 9:00 مساءً",
 ];
 
 // Helper to check if an interview slot datetime has passed
@@ -53,9 +89,16 @@ const isSlotExpired = (slotLabel) => {
     const year = 2026;
     let month = 7; // August (0-indexed)
     let day = null;
-    if (slotLabel.includes('21 أغسطس')) { day = 21; month = 7; }
-    else if (slotLabel.includes('28 أغسطس')) { day = 28; month = 7; }
-    else if (slotLabel.includes('11 سبتمبر')) { day = 11; month = 8; }
+
+    if (slotLabel.includes('أغسطس')) {
+      month = 7;
+      const dayMatch = slotLabel.match(/(\d+)\s*أغسطس/);
+      if (dayMatch) day = parseInt(dayMatch[1], 10);
+    } else if (slotLabel.includes('سبتمبر')) {
+      month = 8;
+      const dayMatch = slotLabel.match(/(\d+)\s*سبتمبر/);
+      if (dayMatch) day = parseInt(dayMatch[1], 10);
+    }
 
     if (!day) return false;
 
@@ -518,60 +561,34 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
                   <option value="" disabled>اختر ميعاد مناسب لك...</option>
 
                   {(() => {
-                    const slotsGroup1 = INTERVIEW_SLOTS.filter(slot => slot.startsWith("الجمعة 21 أغسطس") && !isSlotExpired(slot));
-                    const slotsGroup2 = INTERVIEW_SLOTS.filter(slot => slot.startsWith("الجمعة 28 أغسطس") && !isSlotExpired(slot));
-                    const slotsGroup3 = INTERVIEW_SLOTS.filter(slot => slot.startsWith("الجمعة 11 سبتمبر") && !isSlotExpired(slot));
-                    const hasAvailableSlots = slotsGroup1.length > 0 || slotsGroup2.length > 0 || slotsGroup3.length > 0;
+                    const groups = {};
+                    INTERVIEW_SLOTS.forEach((slot) => {
+                      if (isSlotExpired(slot)) return;
+                      const datePrefix = slot.split(" - ")[0];
+                      if (!groups[datePrefix]) {
+                        groups[datePrefix] = [];
+                      }
+                      groups[datePrefix].push(slot);
+                    });
 
-                    if (!hasAvailableSlots) {
+                    const groupKeys = Object.keys(groups);
+                    if (groupKeys.length === 0) {
                       return <option value="" disabled>لا توجد مواعيد متاحة حالياً</option>;
                     }
 
-                    return (
-                      <>
-                        {slotsGroup1.length > 0 && (
-                          <optgroup label="📅 الجمعة 21 أغسطس">
-                            {slotsGroup1.map((slot) => {
-                              const count = slotCounts[slot] || 0;
-                              const isFull = count >= 6;
-                              return (
-                                <option key={slot} value={slot} disabled={isFull}>
-                                  {slot} {isFull ? '❌ (مكتمل - 6/6)' : count > 0 ? `(${6 - count} أماكن متبقية)` : ''}
-                                </option>
-                              );
-                            })}
-                          </optgroup>
-                        )}
-
-                        {slotsGroup2.length > 0 && (
-                          <optgroup label="📅 الجمعة 28 أغسطس">
-                            {slotsGroup2.map((slot) => {
-                              const count = slotCounts[slot] || 0;
-                              const isFull = count >= 6;
-                              return (
-                                <option key={slot} value={slot} disabled={isFull}>
-                                  {slot} {isFull ? '❌ (مكتمل - 6/6)' : count > 0 ? `(${6 - count} أماكن متبقية)` : ''}
-                                </option>
-                              );
-                            })}
-                          </optgroup>
-                        )}
-
-                        {slotsGroup3.length > 0 && (
-                          <optgroup label="📅 الجمعة 11 سبتمبر">
-                            {slotsGroup3.map((slot) => {
-                              const count = slotCounts[slot] || 0;
-                              const isFull = count >= 6;
-                              return (
-                                <option key={slot} value={slot} disabled={isFull}>
-                                  {slot} {isFull ? '❌ (مكتمل - 6/6)' : count > 0 ? `(${6 - count} أماكن متبقية)` : ''}
-                                </option>
-                              );
-                            })}
-                          </optgroup>
-                        )}
-                      </>
-                    );
+                    return groupKeys.map((datePrefix) => (
+                      <optgroup key={datePrefix} label={`📅 ${datePrefix}`}>
+                        {groups[datePrefix].map((slot) => {
+                          const count = slotCounts[slot] || 0;
+                          const isFull = count >= 6;
+                          return (
+                            <option key={slot} value={slot} disabled={isFull}>
+                              {slot} {isFull ? '❌ (مكتمل - 6/6)' : count > 0 ? `(${6 - count} أماكن متبقية)` : ''}
+                            </option>
+                          );
+                        })}
+                      </optgroup>
+                    ));
                   })()}
                 </select>
               </div>
