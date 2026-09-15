@@ -8,6 +8,8 @@ import bannerBg from "../../assets/banner.webp";
 import peopleImg from "../../assets/people.webp";
 import { useNavigate } from "react-router-dom";
 
+
+
 const BIBLE_VERSES = [
   {
     text: "كُلُّ الْكِتَابِ هُوَ مُوحَى بِهِ مِنَ اللهِ، وَنَافِعٌ لِلتَّعْلِيمِ وَالتَّوْبِيخِ، لِتَقْوِيمِ وَالتَّأْدِيبِ الَّذِي فِي الْبِرِّ.",
@@ -67,6 +69,13 @@ function Home({ themeMode }) {
 
   return (
     <div className="space-y-10 animate-fade-in text-right pb-12">
+      {/* <div>
+        <Marquee >
+          <span>
+            للتواصل او الستفسار
+          </span>
+        </Marquee>
+      </div> */}
       {/* Hero Section */}
       <div
         className={`relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 shadow-2xl bg-cover [background-position:15%_center] lg:bg-center bg-no-repeat bg-[#0d1627] ${
