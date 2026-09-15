@@ -75,7 +75,7 @@ function Home({ themeMode }) {
     <div className="space-y-10 animate-fade-in text-right pb-12">
       {/* Ticker / Marquee Bar */}
       <div className="ticker-wrap rounded-2xl overflow-hidden shadow-lg border border-red-900/30">
-        <div className="ticker-label" >تواصل معنا</div>
+        <div className="ticker-label" onClick={() => navigate("/contactus")}>تواصل معنا</div>
         <div className="ticker-track">
           <div className="ticker-content">
             {[...TICKER_HEADLINES, ...TICKER_HEADLINES, ...TICKER_HEADLINES, ...TICKER_HEADLINES].map((text, idx) => (
