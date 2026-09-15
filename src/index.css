@@ -98,3 +98,88 @@ html, body {
 .animate-slide-up {
   animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+:root {
+  --ticker-bg: var(--color-deep-900);
+  --ticker-label-bg: var(--color-gold-600);
+  --ticker-text: #ffffff;
+  --ticker-height: 40px;
+  --ticker-speed: 25s;
+}
+
+.ticker-wrap {
+  width: 100%;
+  height: var(--ticker-height, 40px);
+  background: var(--ticker-bg, #101923);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.ticker-label {
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: var(--ticker-label-bg, #eeb025);
+  color: var(--color-deep-950); /* dark text on gold background reads better */
+  font-weight: bold;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  z-index: 2;
+}
+
+.ticker-track {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+  direction: ltr; /* يخلي حركة السكرول تتحسب بشكل منطقي وثابت */
+}
+
+.ticker-content {
+  display: flex;
+  direction: ltr; /* ترتيب العناصر دايمًا من الشمال لليمين داخليًا */
+  position: absolute;
+  height: 100%;
+  animation: scroll-left var(--ticker-speed, 25s) linear infinite;
+  will-change: transform;
+}
+
+@media (hover: hover) {
+  .ticker-content:hover {
+    animation-play-state: paused;
+  }
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ticker-text, #ffffff);
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;      
+  unicode-bidi: isolate;
+}
+
+.ticker-item::after {
+  content: "";
+  color: rgba(255, 255, 255, 0.5);
+  margin-left: 60px;
+}
+
+@keyframes scroll-left {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-content {
+    animation: none;
+  }
+}

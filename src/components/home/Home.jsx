@@ -28,6 +28,10 @@ const BIBLE_VERSES = [
   },
 ];
 
+const TICKER_HEADLINES = [
+  "للشكاوي والاستفسارات تواصل علي الارقام : 01555067502 , 01207000395",
+];
+
 function Home({ themeMode }) {
   const navigate = useNavigate();
   const verse = BIBLE_VERSES[0];
@@ -69,13 +73,19 @@ function Home({ themeMode }) {
 
   return (
     <div className="space-y-10 animate-fade-in text-right pb-12">
-      {/* <div>
-        <Marquee >
-          <span>
-            للتواصل او الستفسار
-          </span>
-        </Marquee>
-      </div> */}
+      {/* Ticker / Marquee Bar */}
+      <div className="ticker-wrap rounded-2xl overflow-hidden shadow-lg border border-red-900/30">
+        <div className="ticker-label" >تواصل معنا</div>
+        <div className="ticker-track">
+          <div className="ticker-content">
+            {[...TICKER_HEADLINES, ...TICKER_HEADLINES, ...TICKER_HEADLINES, ...TICKER_HEADLINES].map((text, idx) => (
+              <span key={idx} className="ticker-item">
+                {text}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
       {/* Hero Section */}
       <div
         className={`relative overflow-hidden rounded-[2.5rem] border transition-all duration-500 shadow-2xl bg-cover [background-position:15%_center] lg:bg-center bg-no-repeat bg-[#0d1627] ${
