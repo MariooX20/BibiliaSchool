@@ -39,12 +39,19 @@ export function AuthProvider({ children }) {
 
       // 2. If profile row doesn't exist yet, auto-create (upsert) it seamlessly
       if (!profile && !profileErr) {
+        const meta = sessionUser.user_metadata || {};
         const newProfile = {
           id: sessionUser.id,
           email: sessionUser.email,
-          name: sessionUser.user_metadata?.name || sessionUser.email,
+          name: meta.name || sessionUser.email,
+          phone: meta.phone || null,
+          birth_date: meta.birth_date || null,
+          grade: meta.grade || null,
+          confession_father: meta.confession_father || null,
+          church: meta.church || null,
+          branch: meta.branch || null,
           auth_level: 0,
-          is_enrolled: sessionUser.user_metadata?.is_enrolled === true
+          is_enrolled: meta.is_enrolled === true
         };
 
         const { data: upserted } = await supabase

@@ -144,9 +144,13 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
         });
       }
 
-      // 3. Backup to Google Script — fire and forget (no await needed)
-      fetch(`${scriptURL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' })
-        .catch(err => console.error('Google Script Backup Error:', err));
+      // 3. Backup to Google Script
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: params.toString()
+      }).catch(err => console.error('Google Script Backup Error:', err));
 
       setIsSuccess(true);
     } catch (err) {
