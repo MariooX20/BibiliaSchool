@@ -21,21 +21,15 @@ function App() {
   const { currentUser, logout } = useAuth();
 
   useEffect(() => {
-    // Get initial session & handle recovery / confirmation parameters
+    // Get initial session & handle recovery hash parameters
     const handleUrlHash = () => {
       const hash = window.location.hash;
-      const search = window.location.search;
       if (hash) {
         if (hash.includes('type=recovery')) {
           navigate('/reset-password');
-        } else if (hash.includes('type=signup') || hash.includes('type=email_change')) {
-          navigate('/profile');
         } else if (hash.includes('otp_expired') || hash.includes('error_description')) {
           navigate('/forgot-password?expired=true');
         }
-      }
-      if (search && (search.includes('type=signup') || search.includes('verified=true'))) {
-        navigate('/profile');
       }
     };
 
