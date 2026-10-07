@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Loader2, CheckCircle2, User, Phone, FileText,
-  Calendar, Building, MapPin, GraduationCap, Heart
+  Calendar, Building, MapPin, GraduationCap, Heart, Lock
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
@@ -71,7 +71,7 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
   const { currentUser: authUser, refreshProfile } = useAuth();
   const currentUser = authUser || propUser;
 
-  const isEnrollmentOpen = true;
+  const isEnrollmentOpen = false;
 
   const [formData, setFormData] = useState({
     name: '',
@@ -248,6 +248,42 @@ export default function Enroll({ themeMode, currentUser: propUser }) {
       setIsLoading(false);
     }
   };
+
+  // If enrollment is closed, display closed notice screen
+  if (!isEnrollmentOpen) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-20 animate-fade-in px-4">
+        <div className={`relative overflow-hidden rounded-[2.5rem] border shadow-2xl p-10 md:p-16 transition-colors duration-500 ${
+          themeMode === 'dark' ? 'bg-deep-900/60 border-deep-800' :
+          themeMode === 'sepia' ? 'bg-[#efe9d0]/70 border-[#dfd5b4]' : 'bg-white/80 border-stone-200'
+        }`}>
+          <div className="w-24 h-24 bg-amber-500/15 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <Lock size={44} />
+          </div>
+          <h2 className="text-3xl md:text-4xl font-black mb-4 bg-gradient-to-l from-gold-500 to-amber-500 bg-clip-text text-transparent">
+            باب الالتحاق مغلق حالياً
+          </h2>
+          <p className="opacity-75 text-lg md:text-xl mb-8 max-w-lg mx-auto leading-relaxed">
+            تم إغلاق باب التقديم والالتحاق في الوقت الحالي. تابعونا لمعرفة المواعيد القادمة لفتح باب الالتحاق بمدرسة الكتاب المقدس.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <button 
+              onClick={() => navigate('/')}
+              className="px-8 py-3.5 rounded-xl font-bold bg-gradient-to-r from-gold-600 to-amber-500 text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all text-base"
+            >
+              العودة للرئيسية
+            </button>
+            <button 
+              onClick={() => navigate('/courses')}
+              className="px-8 py-3.5 rounded-xl font-bold border-2 border-gold-500/40 hover:bg-gold-500/10 transition-all text-base"
+            >
+              تصفح المحاضرات
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
 
 

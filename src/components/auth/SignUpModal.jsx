@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Loader2, CheckCircle2 } from 'lucide-react';
+import {
+  X, Loader2, CheckCircle2, User, Mail, Lock,
+  Phone, Calendar, GraduationCap, Heart, Building, MapPin
+} from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 export default function SignUpModal({ isOpen, onClose, themeMode }) {
@@ -8,7 +11,13 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: ''
+    password: '',
+    phone: '',
+    birthDate: '',
+    grade: '',
+    confessionFather: '',
+    church: '',
+    branch: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -18,6 +27,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -25,6 +35,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
     setError('');
 
     const trimmedEmail = formData.email.trim().toLowerCase();
+    const cleanPhone = formData.phone.trim();
 
     // 1. Email format regex check
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -41,36 +52,95 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
       return;
     }
 
+    // 3. Password length check
+    if (formData.password.length < 6) {
+      setError('كلمة المرور يجب أن تتكون من 6 أحرف أو أرقام على الأقل.');
+      return;
+    }
+
+    // 4. Phone validation (Egyptian numbers: 01 + 9 digits)
+    const phoneRegex = /^01[0-9]{9}$/;
+    if (!phoneRegex.test(cleanPhone)) {
+      setError('يرجى إدخال رقم موبايل مصري صحيح مكون من 11 رقماً يبدأ بـ 01 (مثال: 01012345678)');
+      return;
+    }
+
+    // 5. Birth date check
+    if (!formData.birthDate) {
+      setError('يرجى اختيار تاريخ الميلاد.');
+      return;
+    }
+
+    // 6. Grade check
+    if (!formData.grade) {
+      setError('يرجى اختيار المرحلة الدراسية.');
+      return;
+    }
+
     setIsLoading(true);
 
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwiBZCpEcsS9tW40zuddZuW6rYskc2R2JpZxZ4xluK4TGSqkBf6lPQOJy6XiGVNNRQq/exec';
     
     // Construct search params with URLSearchParams for proper UTF-8 Arabic encoding
     const params = new URLSearchParams({
-      name: formData.name,
+      name: formData.name.trim(),
       email: trimmedEmail,
       password: formData.password,
+      phone: cleanPhone,
+      birthDate: formData.birthDate,
+      grade: formData.grade,
+      father: formData.confessionFather.trim(),
+      confessionFather: formData.confessionFather.trim(),
+      church: formData.church.trim(),
+      service: formData.branch.trim(),
+      branch: formData.branch.trim(),
       type: 'signup'
     });
 
     try {
-      // 1. Sign up with Supabase
+      // 1. Sign up with Supabase Auth (stores metadata in user object)
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: trimmedEmail,
         password: formData.password,
-        options: { data: { name: formData.name } }
+        options: {
+          data: {
+            name: formData.name.trim(),
+            phone: cleanPhone,
+            birth_date: formData.birthDate,
+            grade: formData.grade,
+            confession_father: formData.confessionFather.trim(),
+            church: formData.church.trim(),
+            branch: formData.branch.trim(),
+          }
+        }
       });
 
       if (signUpError) throw signUpError;
 
-      // 2. Insert/Upsert into profiles table (non-blocking on failure)
+      // 2. Insert/Upsert into profiles table
       if (data?.user) {
-        supabase.from('profiles').upsert([{
+        const fullProfile = {
           id: data.user.id,
           email: trimmedEmail,
-          name: formData.name
-        }], { onConflict: 'id' }).then(({ error: profileError }) => {
-          if (profileError) console.error('Profile insert error:', profileError);
+          name: formData.name.trim(),
+          phone: cleanPhone,
+          birth_date: formData.birthDate,
+          grade: formData.grade,
+          confession_father: formData.confessionFather.trim(),
+          church: formData.church.trim(),
+          branch: formData.branch.trim(),
+        };
+
+        supabase.from('profiles').upsert([fullProfile], { onConflict: 'id' }).then(({ error: profileError }) => {
+          if (profileError) {
+            console.warn('Profile full upsert notice (fallback to basic):', profileError);
+            // Fallback in case table columns haven't been added yet
+            supabase.from('profiles').upsert([{
+              id: data.user.id,
+              email: trimmedEmail,
+              name: formData.name.trim()
+            }], { onConflict: 'id' });
+          }
         });
       }
 
@@ -83,7 +153,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
       console.error('Error submitting form:', err);
       let rawMsg = typeof err === 'string' ? err : (err?.message || err?.error_description || '');
       if (typeof rawMsg !== 'string' || rawMsg === '{}' || !rawMsg.trim()) {
-        rawMsg = 'حدث خطأ أثناء التسجيل. يرجى التأكد من إعدادات البريد الإلكتروني أو المحاولة لاحقاً.';
+        rawMsg = 'حدث خطأ أثناء التسجيل. يرجى التأكد من البيانات أو المحاولة لاحقاً.';
       }
       if (rawMsg.toLowerCase().includes('rate limit')) {
         setError('لقد تجاوزت عدد محاولات التسجيل المسموح بها مؤقتاً. يرجى الانتظار بضع دقائق.');
@@ -105,7 +175,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${overlayBg} backdrop-blur-sm transition-opacity`}>
       <div 
-        className={`relative w-full max-w-xl max-h-[90vh] overflow-y-auto no-scrollbar p-6 sm:p-8 rounded-2xl border shadow-2xl animate-fade-in ${modalBg} ${textPrimary}`}
+        className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar p-6 sm:p-8 rounded-2xl border shadow-2xl animate-fade-in ${modalBg} ${textPrimary}`}
         dir="rtl"
       >
         <button 
@@ -115,11 +185,13 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
           <X size={20} />
         </button>
 
-        <div className="mb-8 text-center">
-          <h2 className="text-2xl font-bold bg-gradient-to-l from-gold-400 to-amber-500 bg-clip-text text-transparent mb-2">
+        <div className="mb-6 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-l from-gold-400 to-amber-500 bg-clip-text text-transparent mb-1">
             إنشاء حساب جديد
           </h2>
-      
+          <p className="opacity-70 text-xs sm:text-sm">
+            يرجى إدخال بياناتك بدقة للالتحاق والتواصل معك
+          </p>
         </div>
 
         {isSuccess ? (
@@ -136,7 +208,17 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
               onClick={() => {
                 onClose();
                 setIsSuccess(false);
-                setFormData({ name: '', email: '', password: '' });
+                setFormData({
+                  name: '',
+                  email: '',
+                  password: '',
+                  phone: '',
+                  birthDate: '',
+                  grade: '',
+                  confessionFather: '',
+                  church: '',
+                  branch: ''
+                });
                 navigate('/');
               }}
               className="mt-4 px-6 py-2.5 rounded-xl font-bold bg-gold-600 hover:bg-gold-500 text-white shadow-md transition-all text-sm"
@@ -146,60 +228,177 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1.5 opacity-90">الاسم</label>
-              <input 
-                type="text" 
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                placeholder="أدخل اسمك الكامل"
-                className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${inputBg}`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1.5 opacity-90">البريد الإلكتروني</label>
-              <input 
-                type="email" 
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                placeholder="example@email.com"
-                className={`w-full px-4 py-3 rounded-xl border outline-none transition-all text-left ${inputBg}`}
-                dir="ltr"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1.5 opacity-90">كلمة المرور</label>
-              <input 
-                type="password" 
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                placeholder="••••••••"
-                className={`w-full px-4 py-3 rounded-xl border outline-none transition-all text-left ${inputBg}`}
-                dir="ltr"
-              />
+            {/* Grid for Inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
+              {/* الاسم الكامل */}
+              <div className="sm:col-span-2">
+                <label className="text-sm font-semibold mb-1.5 flex items-center gap-1.5 opacity-90">
+                  <User size={15} className="text-gold-500" /> الاسم بالكامل
+                </label>
+                <input 
+                  type="text" 
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="أدخل اسمك الرباعي أو الكامل"
+                  className={`w-full px-4 py-2.5 rounded-xl border outline-none transition-all ${inputBg}`}
+                />
+              </div>
+
+              {/* البريد الإلكتروني */}
+              <div>
+                <label className="text-sm font-semibold mb-1.5 flex items-center gap-1.5 opacity-90">
+                  <Mail size={15} className="text-gold-500" /> البريد الإلكتروني
+                </label>
+                <input 
+                  type="email" 
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  placeholder="example@gmail.com"
+                  className={`w-full px-4 py-2.5 rounded-xl border outline-none transition-all text-left ${inputBg}`}
+                  dir="ltr"
+                />
+              </div>
+
+              {/* كلمة المرور */}
+              <div>
+                <label className="text-sm font-semibold mb-1.5 flex items-center gap-1.5 opacity-90">
+                  <Lock size={15} className="text-gold-500" /> كلمة المرور
+                </label>
+                <input 
+                  type="password" 
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  placeholder="••••••••"
+                  className={`w-full px-4 py-2.5 rounded-xl border outline-none transition-all text-left ${inputBg}`}
+                  dir="ltr"
+                />
+              </div>
+
+              {/* رقم الموبايل (واتساب) */}
+              <div>
+                <label className="text-sm font-semibold mb-1.5 flex items-center gap-1.5 opacity-90">
+                  <Phone size={15} className="text-gold-500" /> رقم الموبايل (يُفضل واتساب)
+                </label>
+                <input 
+                  type="tel" 
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  placeholder="01xxxxxxxxx"
+                  className={`w-full px-4 py-2.5 rounded-xl border outline-none transition-all text-left ${inputBg}`}
+                  dir="ltr"
+                />
+              </div>
+
+              {/* تاريخ الميلاد */}
+              <div>
+                <label className="text-sm font-semibold mb-1.5 flex items-center gap-1.5 opacity-90">
+                  <Calendar size={15} className="text-gold-500" /> تاريخ الميلاد
+                </label>
+                <input 
+                  type="date" 
+                  name="birthDate"
+                  value={formData.birthDate}
+                  onChange={handleChange}
+                  required
+                  className={`w-full px-4 py-2.5 rounded-xl border outline-none transition-all ${inputBg}`}
+                />
+              </div>
+
+              {/* المرحلة الدراسية */}
+              <div>
+                <label className="text-sm font-semibold mb-1.5 flex items-center gap-1.5 opacity-90">
+                  <GraduationCap size={15} className="text-gold-500" /> المرحلة الدراسية
+                </label>
+                <select 
+                  name="grade"
+                  value={formData.grade}
+                  onChange={handleChange}
+                  required
+                  className={`w-full px-4 py-2.5 rounded-xl border outline-none transition-all ${inputBg}`}
+                >
+                  <option value="" disabled>اختر المرحلة الدراسية...</option>
+                  <option value="أولى إعدادي" className={themeMode === 'dark' ? 'bg-deep-900 text-white' : ''}>أولى إعدادي</option>
+                  <option value="ثانية إعدادي" className={themeMode === 'dark' ? 'bg-deep-900 text-white' : ''}>ثانية إعدادي</option>
+                  <option value="ثالثة إعدادي" className={themeMode === 'dark' ? 'bg-deep-900 text-white' : ''}>ثالثة إعدادي</option>
+                </select>
+              </div>
+
+              {/* الفرع الذي تحضر فيه */}
+              <div>
+                <label className="text-sm font-semibold mb-1.5 flex items-center gap-1.5 opacity-90">
+                  <MapPin size={15} className="text-gold-500" /> الفرع اللي بتحضر فيه
+                </label>
+                <input 
+                  type="text" 
+                  name="branch"
+                  value={formData.branch}
+                  onChange={handleChange}
+                  required
+                  placeholder="أدخل اسم الفرع"
+                  className={`w-full px-4 py-2.5 rounded-xl border outline-none transition-all ${inputBg}`}
+                />
+              </div>
+
+              {/* اسم الكنيسة التي تحضر فيها */}
+              <div>
+                <label className="text-sm font-semibold mb-1.5 flex items-center gap-1.5 opacity-90">
+                  <Building size={15} className="text-gold-500" /> اسم الكنيسة اللي بتحضر فيها
+                </label>
+                <input 
+                  type="text" 
+                  name="church"
+                  value={formData.church}
+                  onChange={handleChange}
+                  required
+                  placeholder="اسم الكنيسة"
+                  className={`w-full px-4 py-2.5 rounded-xl border outline-none transition-all ${inputBg}`}
+                />
+              </div>
+
+              {/* اسم أب الاعتراف */}
+              <div>
+                <label className="text-sm font-semibold mb-1.5 flex items-center gap-1.5 opacity-90">
+                  <Heart size={15} className="text-gold-500" /> اسم أب الاعتراف
+                </label>
+                <input 
+                  type="text" 
+                  name="confessionFather"
+                  value={formData.confessionFather}
+                  onChange={handleChange}
+                  required
+                  placeholder="أدخل اسم أب الاعتراف"
+                  className={`w-full px-4 py-2.5 rounded-xl border outline-none transition-all ${inputBg}`}
+                />
+              </div>
+
             </div>
 
             {error && (
-              <p className="text-red-500 text-sm font-medium">{error}</p>
+              <p className="text-red-500 text-sm font-medium bg-red-500/10 p-2.5 rounded-xl border border-red-500/20 text-center">
+                {error}
+              </p>
             )}
 
             <button 
               type="submit" 
               disabled={isLoading}
-              className="mt-4 w-full py-3.5 rounded-xl bg-gradient-to-r from-gold-600 to-amber-500 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+              className="mt-2 w-full py-3.5 rounded-xl bg-gradient-to-r from-gold-600 to-amber-500 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-70 flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
                   <Loader2 size={20} className="animate-spin" />
-                  جاري التسجيل...
+                  جاري تسجيل الحساب...
                 </>
-              ) : 'تسجيل حساب'}
+              ) : 'إنشاء الحساب'}
             </button>
           </form>
         )}
