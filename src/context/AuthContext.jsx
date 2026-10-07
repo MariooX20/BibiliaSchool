@@ -51,7 +51,6 @@ export function AuthProvider({ children }) {
           confession_father: profile?.confession_father || meta.confession_father || null,
           church: profile?.church || meta.church || null,
           branch: profile?.branch || meta.branch || null,
-          auth_level: profile?.auth_level || 0,
           is_enrolled: profile?.is_enrolled === true || meta.is_enrolled === true
         };
 
