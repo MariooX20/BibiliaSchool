@@ -117,34 +117,7 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
 
       if (signUpError) throw signUpError;
 
-      // 2. Insert/Upsert into profiles table
-      if (data?.user) {
-        const fullProfile = {
-          id: data.user.id,
-          email: trimmedEmail,
-          name: formData.name.trim(),
-          phone: cleanPhone,
-          birth_date: formData.birthDate,
-          grade: formData.grade,
-          confession_father: formData.confessionFather.trim(),
-          church: formData.church.trim(),
-          branch: formData.branch.trim(),
-        };
-
-        supabase.from('profiles').upsert([fullProfile], { onConflict: 'id' }).then(({ error: profileError }) => {
-          if (profileError) {
-            console.warn('Profile full upsert notice (fallback to basic):', profileError);
-            // Fallback in case table columns haven't been added yet
-            supabase.from('profiles').upsert([{
-              id: data.user.id,
-              email: trimmedEmail,
-              name: formData.name.trim()
-            }], { onConflict: 'id' });
-          }
-        });
-      }
-
-      // 3. Backup to Google Script
+      // 2. Backup to Google Script
       fetch(scriptURL, {
         method: 'POST',
         mode: 'no-cors',
