@@ -33,31 +33,32 @@ export function AuthProvider({ children }) {
       // 1. Fetch profile from profiles table
       let { data: profile, error: profileErr } = await supabase
         .from('profiles')
-        .select('auth_level, is_enrolled, name, email')
+        .select('*')
         .eq('id', sessionUser.id)
         .maybeSingle();
 
-      // 2. If profile row doesn't exist yet, auto-create (upsert) it seamlessly
-      if (!profile && !profileErr) {
-        const meta = sessionUser.user_metadata || {};
-        const newProfile = {
+      const meta = sessionUser.user_metadata || {};
+
+      // 2. If profile row doesn't exist or is missing metadata, auto-create/update it seamlessly
+      if (!profile || (!profile.phone && meta.phone)) {
+        const fullProfile = {
           id: sessionUser.id,
           email: sessionUser.email,
-          name: meta.name || sessionUser.email,
-          phone: meta.phone || null,
-          birth_date: meta.birth_date || null,
-          grade: meta.grade || null,
-          confession_father: meta.confession_father || null,
-          church: meta.church || null,
-          branch: meta.branch || null,
-          auth_level: 0,
-          is_enrolled: meta.is_enrolled === true
+          name: profile?.name || meta.name || sessionUser.email,
+          phone: profile?.phone || meta.phone || null,
+          birth_date: profile?.birth_date || meta.birth_date || null,
+          grade: profile?.grade || meta.grade || null,
+          confession_father: profile?.confession_father || meta.confession_father || null,
+          church: profile?.church || meta.church || null,
+          branch: profile?.branch || meta.branch || null,
+          auth_level: profile?.auth_level || 0,
+          is_enrolled: profile?.is_enrolled === true || meta.is_enrolled === true
         };
 
         const { data: upserted } = await supabase
           .from('profiles')
-          .upsert([newProfile], { onConflict: 'id' })
-          .select('auth_level, is_enrolled, name, email')
+          .upsert([fullProfile], { onConflict: 'id' })
+          .select('*')
           .maybeSingle();
 
         if (upserted) {
@@ -67,13 +68,19 @@ export function AuthProvider({ children }) {
 
       const enrolledStatus = (profile && profile.is_enrolled !== undefined && profile.is_enrolled !== null)
         ? profile.is_enrolled === true
-        : sessionUser.user_metadata?.is_enrolled === true;
+        : meta.is_enrolled === true;
 
       const userObj = {
         id: sessionUser.id,
         email: sessionUser.email,
-        name: profile?.name || sessionUser.user_metadata?.name || sessionUser.email,
-        photoURL: sessionUser.user_metadata?.photoURL || null,
+        name: profile?.name || meta.name || sessionUser.email,
+        phone: profile?.phone || meta.phone || null,
+        birthDate: profile?.birth_date || meta.birth_date || null,
+        grade: profile?.grade || meta.grade || null,
+        confessionFather: profile?.confession_father || meta.confession_father || null,
+        church: profile?.church || meta.church || null,
+        branch: profile?.branch || meta.branch || null,
+        photoURL: meta.photoURL || null,
         isEnrolled: enrolledStatus,
         authLevel: profile?.auth_level || 0,
       };
@@ -82,12 +89,19 @@ export function AuthProvider({ children }) {
       return userObj;
     } catch (err) {
       console.error('Error fetching profile in AuthContext:', err);
+      const meta = sessionUser.user_metadata || {};
       const fallbackUser = {
         id: sessionUser.id,
         email: sessionUser.email,
-        name: sessionUser.user_metadata?.name || sessionUser.email,
-        photoURL: sessionUser.user_metadata?.photoURL || null,
-        isEnrolled: sessionUser.user_metadata?.is_enrolled === true,
+        name: meta.name || sessionUser.email,
+        phone: meta.phone || null,
+        birthDate: meta.birth_date || null,
+        grade: meta.grade || null,
+        confessionFather: meta.confession_father || null,
+        church: meta.church || null,
+        branch: meta.branch || null,
+        photoURL: meta.photoURL || null,
+        isEnrolled: meta.is_enrolled === true,
         authLevel: 0,
       };
       setCurrentUser(fallbackUser);
