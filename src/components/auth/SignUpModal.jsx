@@ -118,12 +118,17 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
       if (signUpError) throw signUpError;
 
       // 2. Backup to Google Script
-      fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-        body: params.toString()
-      }).catch(err => console.error('Google Script Backup Error:', err));
+      try {
+        await fetch(scriptURL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+          body: params.toString()
+        });
+      } catch (scriptErr) {
+        console.warn('Google Script POST error, trying GET fallback:', scriptErr);
+        fetch(`${scriptURL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' }).catch(() => {});
+      }
 
       setIsSuccess(true);
     } catch (err) {
