@@ -11,27 +11,22 @@ const lessons = [
     type: "فيديو",
     driveUrl: "https://drive.google.com/file/d/1i2-ErghNtNlSIM531149ulvlpqpSb-ma/view",
   },
-  // {
-  //   id: 2,
-  //   title: "سفر التكوين - الجزء الأول",
-  //   duration: "50 دقيقة",
-  //   type: "فيديو",
-  //   driveUrl: null,
-  // },
-  // {
-  //   id: 3,
-  //   title: "اختبار على سفر التكوين",
-  //   duration: "15 دقيقة",
-  //   type: "امتحان",
-  //   driveUrl: null,
-  // },
-  // {
-  //   id: 4,
-  //   title: "سفر القضاة",
-  //   duration: "55 دقيقة",
-  //   type: "فيديو",
-  //   driveUrl: null,
-  // },
+    {
+    id: 2,
+    title: "الخليقة",
+    duration: "40 دقيقة",
+    type: "فيديو",
+    driveUrl: "https://drive.google.com/file/d/11lX-c5vYyHat4SpoUsePbeEajZhGQ3Gt/view?usp=sharing",
+  },
+  {
+    id: 3,
+    title: "فلك نوح و برج بابل",
+    duration: "40 دقيقة",
+    type: "فيديو",
+    driveUrl: "https://drive.google.com/drive/folders/1dGZIaJxEWF1RBctWQ8PlUJmXD7PKG-Tu?usp=sharing",
+  },
+
+
 ];
 
 function Year1OldTestament() {

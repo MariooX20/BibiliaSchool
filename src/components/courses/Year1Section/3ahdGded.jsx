@@ -4,27 +4,14 @@ import { useNavigate } from 'react-router-dom';
 // Each lesson has its own Drive URL.
 // Set driveUrl to null for lessons not yet published.
 const lessons = [
-  {
-    id: 1,
-    title: "مقدمة في العهد الجديد",
-    duration: "40 دقيقة",
-    type: "فيديو",
-    driveUrl: null,
-  },
-  {
-    id: 2,
-    title: "إنجيل متى - الجزء الأول",
-    duration: "55 دقيقة",
-    type: "فيديو",
-    driveUrl: null,
-  },
-  {
-    id: 3,
-    title: "اختبار على إنجيل متى",
-    duration: "20 دقيقة",
-    type: "امتحان",
-    driveUrl: null,
-  },
+  // {
+  //   id: 1,
+  //   title: "مقدمة في العهد الجديد",
+  //   duration: "40 دقيقة",
+  //   type: "فيديو",
+  //   driveUrl: null,
+  // },
+  
 ];
 
 function Year1NewTestament() {
