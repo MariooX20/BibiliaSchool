@@ -15,7 +15,6 @@ import {
   Eye,
   X,
   Printer,
-  ShieldCheck,
   Lock,
   Pencil,
   Check
@@ -33,6 +32,7 @@ const Profile = ({ themeMode, currentUser }) => {
   // Interactive states for certificates
   const [activeTerm, setActiveTerm] = useState("term1");
   const [showCertModal, setShowCertModal] = useState(false);
+  const [dbAuthLevel, setDbAuthLevel] = useState(null);
 
   // QR (loaded from Supabase)
   const [studentCode, setStudentCode] = useState(null); // e.g. BS_2028_42_Wave_2
@@ -79,12 +79,16 @@ const Profile = ({ themeMode, currentUser }) => {
       try {
         const { data: prof, error: profErr } = await supabase
           .from("profiles")
-          .select("student_id")
+          .select("student_id, auth_level")
           .eq("id", activeUser.id)
           .maybeSingle();
 
         if (profErr) console.warn("Profile fetch error:", profErr);
         if (cancelled) return;
+
+        if (prof?.auth_level !== undefined && prof?.auth_level !== null) {
+          setDbAuthLevel(Number(prof.auth_level));
+        }
 
         const code = prof?.student_id ?? null;
         setStudentCode(code);
@@ -161,6 +165,20 @@ const Profile = ({ themeMode, currentUser }) => {
   // Real student ID from Supabase (null until the student is linked)
   const studentId = studentCode || "غير مرتبط بعد";
 
+  const currentAuthLevel = Number(
+    dbAuthLevel ?? activeUser?.authLevel ?? activeUser?.auth_level ?? 0
+  );
+
+  const getAcademicStatusText = () => {
+    if (currentAuthLevel === 1) {
+      return "طالب في مدرسة الكتاب المقدس — السنة الدراسية الأولى";
+    }
+    if (currentAuthLevel === 2) {
+      return "طالب في مدرسة الكتاب المقدس — السنة الدراسية الثانية";
+    }
+    return "غير ملتحق بالمدرسة";
+  };
+
   // Theme-aware palette helper
   const isDark = themeMode === "dark";
   const isSepia = themeMode === "sepia";
@@ -188,7 +206,7 @@ const Profile = ({ themeMode, currentUser }) => {
       termTitle: "الترم الأول",
       certName: "شهادة إتمام دراسات العهد الجديد",
       code: "BS-CERT-9041-T1",
-      summary: "تم استيفاء معايير الحضور (92%) واجتياز الامتحانات بنجاح بمعدل تراكمي ممتاز.",
+      summary: "",
       status: "جاهزة للاستلام",
     },
     term2: {
@@ -323,7 +341,7 @@ const Profile = ({ themeMode, currentUser }) => {
   };
 
   const handleDownloadCertPdf = () => {
-    window.print();
+    // Disabled temporarily until certificates are ready
   };
 
   if (!currentUser) {
@@ -468,21 +486,10 @@ const Profile = ({ themeMode, currentUser }) => {
             )}
           </div>
           <p className={`text-sm sm:text-base mt-1 font-medium ${textSecondary}`}>
-            طالب في مدرسة الكتاب المقدس — السنة الدراسية الثانية (اللاهوت والعهد الجديد)
+            {getAcademicStatusText()}
           </p>
 
-          {/* Identification Badges */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mt-4 text-xs font-semibold">
-            <span className="bg-amber-500/15 text-amber-400 border border-amber-500/30 px-3.5 py-1 rounded-full shadow-sm">
-              رقم القيد: <span dir="ltr">{studentId}</span>
-            </span>
-            <span className={`px-3.5 py-1 rounded-full border ${subBoxBg} ${textSecondary}`}>
-              المجموعة: مجموعة القديس يوحنا (A)
-            </span>
-            <span className="bg-emerald-950/70 text-emerald-400 border border-emerald-500/30 px-3.5 py-1 rounded-full shadow-sm">
-              حالة الحساب: معتمد ومكتمل
-            </span>
-          </div>
+
 
           {/* Section Divider */}
           <div className={`w-full max-w-4xl my-7 border-t ${borderDivider}`}></div>
@@ -616,24 +623,18 @@ const Profile = ({ themeMode, currentUser }) => {
                 الترم الأول
               </button>
               <button
-                onClick={() => setActiveTerm("term2")}
-                className={`py-2 px-1 rounded-lg transition-all ${
-                  activeTerm === "term2"
-                    ? "bg-amber-500 text-slate-950 font-extrabold shadow"
-                    : `${textMuted} hover:${textPrimary}`
-                }`}
+                disabled
+                className={`py-2 px-1 rounded-lg transition-all opacity-40 cursor-not-allowed ${textMuted}`}
                 type="button"
+                title="غير متاح حالياً"
               >
                 الترم الثاني
               </button>
               <button
-                onClick={() => setActiveTerm("term3")}
-                className={`py-2 px-1 rounded-lg transition-all ${
-                  activeTerm === "term3"
-                    ? "bg-amber-500 text-slate-950 font-extrabold shadow"
-                    : `${textMuted} hover:${textPrimary}`
-                }`}
+                disabled
+                className={`py-2 px-1 rounded-lg transition-all opacity-40 cursor-not-allowed ${textMuted}`}
                 type="button"
+                title="غير متاح حالياً"
               >
                 الترم الثالث
               </button>
@@ -651,47 +652,32 @@ const Profile = ({ themeMode, currentUser }) => {
               </div>
               <h4 className="text-sm font-extrabold text-white mt-1">{currentCert.certName}</h4>
               <div className="text-[11px] text-slate-300 mt-1">منحت للطالب: <span className="text-amber-300 font-bold">{studentName}</span></div>
-              <div className="inline-flex items-center gap-1.5 mt-3 px-3 py-1 bg-amber-950/60 border border-amber-500/40 rounded-full text-[10px] text-amber-300 font-bold">
-                <ShieldCheck size={14} className="text-amber-400 shrink-0" />
-                <span>معتمدة برقم ترخيص: {currentCert.code}</span>
-              </div>
             </div>
-            <p className={`text-xs leading-relaxed text-center ${textMuted}`}>
-              {currentCert.summary}
-            </p>
+            {currentCert.summary && (
+              <p className={`text-xs leading-relaxed text-center ${textMuted}`}>
+                {currentCert.summary}
+              </p>
+            )}
           </div>
 
           {/* Action Buttons */}
           <div className={`mt-4 pt-3 border-t ${borderDivider} space-y-2`}>
             <button
-              onClick={() => setShowCertModal(true)}
+              onClick={() => {}}
               className="w-full py-2 px-3 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-amber-500/30"
               type="button"
             >
               <Eye size={16} />
-              <span>معاينة الشهادة (تكبير / تفاصيل الاعتماد)</span>
+              <span>معاينة الشهادة</span>
             </button>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={handleDownloadCertPdf}
-                className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#d97706] to-[#f59e0b] hover:from-[#b45309] hover:to-[#d97706] text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 transition-all text-center"
-                type="button"
-              >
-                <Download size={16} className="text-slate-950 shrink-0" />
-                <span>تحميل PDF</span>
-              </button>
-              <a
-                href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(currentCert.certName)}&organizationName=Biblia+School`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`py-2.5 px-3 rounded-xl border ${subBoxBg} ${textSecondary} hover:${textPrimary} text-xs font-medium flex items-center justify-center gap-1.5 transition-colors text-center`}
-              >
-                <svg className="w-3.5 h-3.5 text-amber-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"></path>
-                </svg>
-                <span>إضافة لـ LinkedIn</span>
-              </a>
-            </div>
+            <button
+              onClick={handleDownloadCertPdf}
+              className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#d97706] to-[#f59e0b] hover:from-[#b45309] hover:to-[#d97706] text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 transition-all text-center"
+              type="button"
+            >
+              <Download size={16} className="text-slate-950 shrink-0" />
+              <span>تحميل PDF</span>
+            </button>
           </div>
         </section>
 
@@ -709,7 +695,7 @@ const Profile = ({ themeMode, currentUser }) => {
                 </div>
                 <div>
                   <h3 className={`text-base font-bold ${textPrimary}`}>رمز الدخول الرقمي (QR)</h3>
-                  <p className={`text-xs ${textMuted}`}>لتسجيل الحضور بالقاعات والبث</p>
+                  <p className={`text-xs ${textMuted}`}>لتسجيل الحضور بالقاعات </p>
                 </div>
               </div>
               {qrUrl && (
@@ -881,61 +867,12 @@ const Profile = ({ themeMode, currentUser }) => {
               </tr>
             </thead>
             <tbody className={`divide-y ${borderDivider}`}>
-              {/* Row 1 */}
-              <tr className="hover:bg-amber-500/5 transition-colors">
-                <td className={`py-3.5 px-4 font-bold ${textPrimary} flex items-center gap-2`}>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  مدخل إلى لاهوت القديس بولس في رسالة رومية
-                </td>
-                <td className={`py-3.5 px-4 ${textSecondary}`}>د. يوسف ميخائيل</td>
-                <td className={`py-3.5 px-4 ${textMuted}`}>الخميس، 18 سبتمبر 2024 (7:00 م)</td>
-                <td className="py-3.5 px-4 text-center">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/70 text-emerald-400 border border-emerald-500/30">
-                    تم تسجيل الحضور بالـ QR
-                  </span>
-                </td>
-                <td className="py-3.5 px-4 text-center">
-                  <Link to="/courses" className="text-amber-500 hover:underline font-semibold">
-                    تحميل العرض (PDF)
-                  </Link>
-                </td>
-              </tr>
-              {/* Row 2 */}
-              <tr className="hover:bg-amber-500/5 transition-colors">
-                <td className={`py-3.5 px-4 font-bold ${textPrimary} flex items-center gap-2`}>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  السياق التاريخي والجغرافي لأسفار العهد الجديد
-                </td>
-                <td className={`py-3.5 px-4 ${textSecondary}`}>أ. مريم إسطفانوس</td>
-                <td className={`py-3.5 px-4 ${textMuted}`}>الإثنين، 15 سبتمبر 2024 (8:00 م)</td>
-                <td className="py-3.5 px-4 text-center">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/70 text-emerald-400 border border-emerald-500/30">
-                    تم الحضور عبر البث المباشر
-                  </span>
-                </td>
-                <td className="py-3.5 px-4 text-center">
-                  <Link to="/courses" className="text-amber-500 hover:underline font-semibold">
-                    ملخص المحاضرة
-                  </Link>
-                </td>
-              </tr>
-              {/* Row 3 */}
-              <tr className="hover:bg-amber-500/5 transition-colors">
-                <td className={`py-3.5 px-4 font-bold ${textPrimary} flex items-center gap-2`}>
-                  <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                  ورشة التفسير الكتابي والتطبيق العملي
-                </td>
-                <td className={`py-3.5 px-4 ${textSecondary}`}>القس مرقس عزيز</td>
-                <td className={`py-3.5 px-4 ${textMuted}`}>الجمعة، 12 سبتمبر 2024 (6:00 م)</td>
-                <td className="py-3.5 px-4 text-center">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/60 text-amber-400 border border-amber-500/30">
-                    غياب بعذر
-                  </span>
-                </td>
-                <td className="py-3.5 px-4 text-center">
-                  <Link to="/courses" className={`hover:text-amber-500 font-semibold ${textSecondary}`}>
-                    مشاهدة التسجيل
-                  </Link>
+              <tr>
+                <td colSpan="5" className={`py-12 text-center ${textMuted}`}>
+                  <div className="flex flex-col items-center justify-center gap-1.5">
+                    <p className="text-sm font-semibold">لا يوجد سجل حضور مسجل حتى الآن</p>
+                    <p className="text-xs">سيتم تسجيل وتحديث حضورك هنا تلقائياً عند مسح رمز الـ QR </p>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -986,7 +923,7 @@ const Profile = ({ themeMode, currentUser }) => {
                   <p className="font-serif font-bold text-amber-300 mt-1">د. يوسف ميخائيل</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-400">رقم ترخيص الشهادة</p>
+                  <p className="text-[10px] text-slate-400">كود الشهادة</p>
                   <p className="font-mono font-bold text-emerald-400 mt-1">{currentCert.code}</p>
                 </div>
               </div>
