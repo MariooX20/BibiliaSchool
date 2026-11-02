@@ -25,8 +25,6 @@ const lessons = [
     type: "فيديو",
     driveUrl: "https://drive.google.com/drive/folders/1dGZIaJxEWF1RBctWQ8PlUJmXD7PKG-Tu?usp=sharing",
   },
-
-
 ];
 
 function Year1OldTestament() {

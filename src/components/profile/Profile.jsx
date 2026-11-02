@@ -10,15 +10,14 @@ import {
   Loader2,
   Award,
   QrCode,
-  CheckCircle2,
-  Download,
-  Eye,
   X,
   Printer,
   Lock,
   Pencil,
   Check
 } from "lucide-react";
+import { useAttendance } from "./useAttendance";
+import { AttendanceCard, AttendanceTable } from "./AttendanceSection";
 
 const Profile = ({ themeMode, currentUser }) => {
   const { currentUser: authUser, refreshProfile } = useAuth();
@@ -169,6 +168,9 @@ const Profile = ({ themeMode, currentUser }) => {
     dbAuthLevel ?? activeUser?.authLevel ?? activeUser?.auth_level ?? 0
   );
 
+  // Real attendance (sessions held for the student's year vs. their QR scans)
+  const att = useAttendance(studentCode, currentAuthLevel, qrLoading);
+
   const getAcademicStatusText = () => {
     if (currentAuthLevel === 1) {
       return "طالب في مدرسة الكتاب المقدس — السنة الدراسية الأولى";
@@ -199,6 +201,9 @@ const Profile = ({ themeMode, currentUser }) => {
   const textSecondary = isDark ? "text-slate-300" : isSepia ? "text-[#634e3a]" : "text-slate-600";
   const textMuted = isDark ? "text-slate-400" : isSepia ? "text-[#87725d]" : "text-slate-500";
   const borderDivider = isDark ? "border-[#1f2d4a]" : isSepia ? "border-[#dfd3bc]" : "border-slate-100";
+
+  // Theme tokens shared with the attendance components
+  const ui = { isDark, isSepia, cardBg, subBoxBg, textPrimary, textSecondary, textMuted, borderDivider };
 
   // Certificates mock data per term
   const certificatesData = {
@@ -377,7 +382,7 @@ const Profile = ({ themeMode, currentUser }) => {
         </div>
         <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border ${subBoxBg} ${textSecondary} shadow-sm`}>
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-          <span className="text-[11px] font-medium">العام الدراسي 2024 - 2025 • الفصل الدراسي الثاني</span>
+          <span className="text-[11px] font-medium">  2027 - 2026    </span>
         </div>
       </div>
 
@@ -604,79 +609,32 @@ const Profile = ({ themeMode, currentUser }) => {
                   <p className={`text-xs ${textMuted}`}>شهادة إتمام السنة الدراسية</p>
                 </div>
               </div>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/40 animate-pulse">
-                {currentCert.status}
+              <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/25">
+                غير متاحة حالياً
               </span>
             </div>
 
-            {/* Term Tabs */}
-            <div className={`grid grid-cols-3 gap-1.5 p-1 rounded-xl mt-4 text-[11px] font-bold text-center border ${subBoxBg}`}>
-              <button
-                onClick={() => setActiveTerm("term1")}
-                className={`py-2 px-1 rounded-lg transition-all ${
-                  activeTerm === "term1"
-                    ? "bg-amber-500 text-slate-950 font-extrabold shadow"
-                    : `${textMuted} hover:${textPrimary}`
-                }`}
-                type="button"
-              >
-                الترم الأول
-              </button>
-              <button
-                disabled
-                className={`py-2 px-1 rounded-lg transition-all opacity-40 cursor-not-allowed ${textMuted}`}
-                type="button"
-                title="غير متاح حالياً"
-              >
-                الترم الثاني
-              </button>
-              <button
-                disabled
-                className={`py-2 px-1 rounded-lg transition-all opacity-40 cursor-not-allowed ${textMuted}`}
-                type="button"
-                title="غير متاح حالياً"
-              >
-                الترم الثالث
-              </button>
-            </div>
-
-            {/* Elegant Certificate Miniature Preview Card with Gold Borders */}
-            <div className="my-4 p-4 rounded-xl bg-gradient-to-b from-[#182542] to-[#0f172a] border border-amber-500/40 relative overflow-hidden text-center shadow-inner text-slate-100">
-              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-200 to-amber-600"></div>
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <span className="text-amber-400 text-xs">✦</span>
-                <p className="text-[11px] tracking-widest text-amber-300 uppercase font-bold font-serif">
-                  BIBLIA SCHOOL CERTIFICATE • {activeTerm.toUpperCase()}
-                </p>
-                <span className="text-amber-400 text-xs">✦</span>
+            {/* Empty State / Not Available Message */}
+            <div className="my-8 flex flex-col items-center justify-center min-h-[140px] gap-3 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-400/80 flex items-center justify-center border border-amber-500/20">
+                <Award size={34} />
               </div>
-              <h4 className="text-sm font-extrabold text-white mt-1">{currentCert.certName}</h4>
-              <div className="text-[11px] text-slate-300 mt-1">منحت للطالب: <span className="text-amber-300 font-bold">{studentName}</span></div>
+              <div>
+                <h4 className={`text-sm font-bold ${textPrimary} mb-1`}>لا توجد شهادات متاحة حالياً</h4>
+               
+              </div>
             </div>
-            {currentCert.summary && (
-              <p className={`text-xs leading-relaxed text-center ${textMuted}`}>
-                {currentCert.summary}
-              </p>
-            )}
           </div>
 
-          {/* Action Buttons */}
-          <div className={`mt-4 pt-3 border-t ${borderDivider} space-y-2`}>
+          {/* Action Button */}
+          <div className={`mt-4 pt-3 border-t ${borderDivider}`}>
             <button
-              onClick={() => {}}
-              className="w-full py-2 px-3 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-amber-500/30"
+              disabled
+              className="w-full py-2.5 px-3 rounded-xl bg-amber-500/10 text-slate-400 text-xs font-bold flex items-center justify-center gap-2 cursor-not-allowed border border-amber-500/20"
               type="button"
             >
-              <Eye size={16} />
-              <span>معاينة الشهادة</span>
-            </button>
-            <button
-              onClick={handleDownloadCertPdf}
-              className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#d97706] to-[#f59e0b] hover:from-[#b45309] hover:to-[#d97706] text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 transition-all text-center"
-              type="button"
-            >
-              <Download size={16} className="text-slate-950 shrink-0" />
-              <span>تحميل PDF</span>
+              <Award size={16} className="text-amber-400/40" />
+              <span>الشهادة غير متاحة حالياً</span>
             </button>
           </div>
         </section>
@@ -722,13 +680,11 @@ const Profile = ({ themeMode, currentUser }) => {
                 <p className={`text-sm leading-relaxed ${textMuted}`}>
                   {studentCode
                     ? "لا يوجد رمز QR متاح لحسابك حالياً. تواصل مع الإدارة."
-                    : "حسابك غير مرتبط برقم قيد بعد، لذلك لا يوجد رمز QR. تواصل مع الإدارة."}
+                    : "لا يوجد رمز QR. تواصل مع الإدارة."}
                 </p>
               )}
             </div>
-            <p className={`text-xs text-center leading-relaxed ${textMuted}`}>
-              امسح الرمز ضوئياً عند بوابات المحاضرة المباشرة أو شاركه لتأكيد حضورك التفاعلي.
-            </p>
+            
           </div>
 
           {/* Open QR in Drive */}
@@ -756,129 +712,13 @@ const Profile = ({ themeMode, currentUser }) => {
           </div>
         </section>
 
-        {/* CARD 3: نسبة الحضور والالتزام (Attendance & Commitment) */}
-        <section
-          className={`rounded-2xl border ${cardBg} p-6 flex flex-col justify-between hover:border-amber-500/40 transition-all shadow-xl`}
-          data-purpose="attendance-analytics-card"
-        >
-          <div>
-            {/* Header */}
-            <div className={`flex items-center justify-between pb-4 border-b ${borderDivider}`}>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-                  <CheckCircle2 size={22} />
-                </div>
-                <div>
-                  <h3 className={`text-base font-bold ${textPrimary}`}>نسبة الحضور والالتزام</h3>
-                  <p className={`text-xs ${textMuted}`}>إحصائيات المحاضرات والندوات</p>
-                </div>
-              </div>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                مؤهل للتخرج
-              </span>
-            </div>
-
-            {/* Circular Attendance Indicator Gauge (92%) */}
-            <div className="flex flex-col items-center justify-center my-6">
-              <div className="relative w-36 h-36 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                  {/* Background track */}
-                  <path
-                    className={isDark ? "text-slate-800" : isSepia ? "text-[#dfd4bd]" : "text-slate-200"}
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3.5"
-                  ></path>
-                  {/* Progress ring (92%) */}
-                  <path
-                    className="text-emerald-400"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeDasharray="92, 100"
-                    strokeLinecap="round"
-                    strokeWidth="3.5"
-                  ></path>
-                </svg>
-                <div className="absolute flex flex-col items-center">
-                  <span className={`text-3xl font-black ${textPrimary}`}>92%</span>
-                  <span className="text-[11px] text-emerald-400 font-bold">ممتاز جداً</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Attendance Metric Points */}
-            <div className="space-y-2.5 text-xs">
-              <div className={`flex justify-between items-center p-2.5 rounded-lg border ${subBoxBg}`}>
-                <span className={textMuted}>المحاضرات المحضورة:</span>
-                <span className={`font-bold ${textPrimary}`}>23 من أصل 25 محاضرة</span>
-              </div>
-              <div className={`flex justify-between items-center p-2.5 rounded-lg border ${subBoxBg}`}>
-                <span className={textMuted}>الغيابات المبررة:</span>
-                <span className="font-bold text-amber-500">2 محاضرة (مقبولة)</span>
-              </div>
-              <div className={`flex justify-between items-center p-2.5 rounded-lg border ${subBoxBg}`}>
-                <span className={textMuted}>الحد الأدنى المطلوب للتخرج:</span>
-                <span className={`font-bold ${textSecondary}`}>80% كحد أدنى</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Progress Note */}
-          <div className={`mt-5 pt-3 border-t ${borderDivider}`}>
-            <p className={`text-[11px] leading-normal ${textMuted}`}>
-              ✓ حافظ على هذه النسبة حتى نهاية الفصل لتضمن أولوية التكريم في الحفل السنوي.
-            </p>
-          </div>
-        </section>
+        {/* CARD 3: نسبة الحضور والالتزام (real data from Supabase) */}
+        <AttendanceCard att={att} ui={ui} />
       </div>
       {/* END: AcademicFeatureGrid */}
 
-      {/* BEGIN: QuickStatsAndLectures */}
-      <section
-        className={`rounded-2xl border ${cardBg} p-6 shadow-xl`}
-        data-purpose="recent-activities-table"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <div>
-            <h3 className={`text-lg font-bold ${textPrimary}`}>سجل حضور المحاضرات الأخيرة</h3>
-            <p className={`text-xs ${textMuted}`}>تحديث فوري لآخر الجلسات الدراسية وحالة التأكيد</p>
-          </div>
-          <Link
-            to="/courses"
-            className="text-xs font-bold text-amber-500 hover:text-amber-400 flex items-center gap-1.5 transition-colors"
-          >
-            <span>عرض جميع المحاضرات المسجلة</span>
-            <span>←</span>
-          </Link>
-        </div>
-
-        {/* Responsive Table Container */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-right text-xs">
-            <thead className={`text-[11px] ${textMuted} uppercase border-b ${borderDivider} ${subBoxBg}`}>
-              <tr>
-                <th className="py-3 px-4 font-bold" scope="col">عنوان المحاضرة</th>
-                <th className="py-3 px-4 font-bold" scope="col">المحاضر</th>
-                <th className="py-3 px-4 font-bold" scope="col">التاريخ والتوقيت</th>
-                <th className="py-3 px-4 font-bold text-center" scope="col">حالة الحضور</th>
-                <th className="py-3 px-4 font-bold text-center" scope="col">المواد الدراسية</th>
-              </tr>
-            </thead>
-            <tbody className={`divide-y ${borderDivider}`}>
-              <tr>
-                <td colSpan="5" className={`py-12 text-center ${textMuted}`}>
-                  <div className="flex flex-col items-center justify-center gap-1.5">
-                    <p className="text-sm font-semibold">لا يوجد سجل حضور مسجل حتى الآن</p>
-                    <p className="text-xs">سيتم تسجيل وتحديث حضورك هنا تلقائياً عند مسح رمز الـ QR </p>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+      {/* BEGIN: QuickStatsAndLectures (real data from Supabase) */}
+      <AttendanceTable att={att} ui={ui} />
       {/* END: QuickStatsAndLectures */}
 
       {/* CERTIFICATE FULL PREVIEW MODAL */}
@@ -914,7 +754,7 @@ const Profile = ({ themeMode, currentUser }) => {
                 {studentName}
               </h3>
               <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto mb-4">
-                قد أتم بنجاح متطلبات دراسة <strong>{currentCert.certName}</strong> ونسبة حضور <strong>92%</strong> وفقاً للائحة الأكاديمية المعتمدة.
+                قد أتم بنجاح متطلبات دراسة <strong>{currentCert.certName}</strong> ونسبة حضور <strong>{att.percent !== null ? `${att.percent}%` : "—"}</strong> وفقاً للائحة الأكاديمية المعتمدة.
               </p>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-amber-500/30 text-xs text-slate-300">
