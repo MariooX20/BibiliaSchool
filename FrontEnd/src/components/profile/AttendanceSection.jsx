@@ -43,7 +43,7 @@ export function AttendanceCard({ att, ui }) {
           </div>
         ) : !att.hasStudentCode ? (
           <p className={`text-sm text-center leading-relaxed my-12 ${textMuted}`}>
-            حسابك غير مرتبط برقم قيد بعد، لذلك لا يمكن حساب الحضور. تواصل مع الإدارة.
+            حسابك غير مرتبط بQR بعد، لذلك لا يمكن حساب الحضور. تواصل مع الإدارة.
           </p>
         ) : !att.isEnrolled ? (
           <p className={`text-sm text-center leading-relaxed my-12 ${textMuted}`}>
@@ -130,10 +130,10 @@ const fmtDate = (d) =>
 const fmtTime = (iso) =>
   iso
     ? new Date(iso).toLocaleTimeString("ar-EG", {
-        hour: "numeric",
-        minute: "2-digit",
-        timeZone: "Africa/Cairo",
-      })
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: "Africa/Cairo",
+    })
     : "";
 
 export function AttendanceTable({ att, ui }) {

@@ -1,12 +1,10 @@
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { supabase } from "../../lib/supabase";
 import {
   UserRound,
-  Upload,
-  CheckCircle,
-  XCircle,
+  ExternalLink,
   Loader2,
   Award,
   QrCode,
@@ -19,14 +17,14 @@ import {
 import { useAttendance } from "./useAttendance";
 import { AttendanceCard, AttendanceTable } from "./AttendanceSection";
 
+const GRADUATION_PROJECT_FORM_URL =
+  "https://forms.gle/BSUNvWiSrXgnmrqv6";
+const PDF_PROJECT_FORM_URL =
+  "https://forms.gle/iS91YSBtqNmfLt91A";
+
 const Profile = ({ themeMode, currentUser }) => {
   const { currentUser: authUser, refreshProfile } = useAuth();
   const activeUser = currentUser || authUser;
-
-  const fileInput = useRef();
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState(null);
 
   // Interactive states for certificates
   const [activeTerm, setActiveTerm] = useState("term1");
@@ -39,7 +37,8 @@ const Profile = ({ themeMode, currentUser }) => {
   const [qrLoading, setQrLoading] = useState(true);
 
   // Lock status for project submission
-  const isProjectLocked = true;
+  const isProjectLocked = false;
+  const isPdfLocked = false;
 
   // Dynamic user name from auth profile / metadata / email
   const getInitialName = () => {
@@ -188,14 +187,14 @@ const Profile = ({ themeMode, currentUser }) => {
   const cardBg = isDark
     ? "bg-[#131b2e] border-[#23304e]"
     : isSepia
-    ? "bg-[#fbf7eb] border-[#e6dbc3]"
-    : "bg-white border-slate-200";
+      ? "bg-[#fbf7eb] border-[#e6dbc3]"
+      : "bg-white border-slate-200";
 
   const subBoxBg = isDark
     ? "bg-[#0b1326] border-[#1f2d4a]"
     : isSepia
-    ? "bg-[#f4ecdb] border-[#e1d5be]"
-    : "bg-slate-50 border-slate-200";
+      ? "bg-[#f4ecdb] border-[#e1d5be]"
+      : "bg-slate-50 border-slate-200";
 
   const textPrimary = isDark ? "text-white" : isSepia ? "text-[#342415]" : "text-slate-900";
   const textSecondary = isDark ? "text-slate-300" : isSepia ? "text-[#634e3a]" : "text-slate-600";
@@ -231,119 +230,6 @@ const Profile = ({ themeMode, currentUser }) => {
   };
 
   const currentCert = certificatesData[activeTerm];
-
-  const openFilePicker = () => {
-    if (isUploading) return;
-    fileInput.current?.click();
-  };
-
-  const uploadFile = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.size > 50 * 1024 * 1024) {
-      setUploadStatus({ type: "error", message: "حجم الملف يتجاوز الحد الأقصى (50 ميجابايت)!" });
-      return;
-    }
-
-    setIsUploading(true);
-    setUploadProgress(0);
-    setUploadStatus(null);
-
-    try {
-      const params = new URLSearchParams({
-        userId: currentUser?.id || "guest",
-        userName: studentName,
-        fileName: file.name,
-        fileType: file.type || "application/octet-stream",
-      });
-
-      const xhr = new XMLHttpRequest();
-
-      xhr.upload.addEventListener("progress", (event) => {
-        if (event.lengthComputable) {
-          const percentComplete = Math.round((event.loaded / event.total) * 100);
-          setUploadProgress(percentComplete);
-        }
-      });
-
-      xhr.onload = () => {
-        setIsUploading(false);
-        if (xhr.status >= 200 && xhr.status < 300) {
-          setUploadStatus({ type: "success", message: "تم رفع مشروع التخرج بنجاح!" });
-          if (fileInput.current) fileInput.current.value = "";
-        } else {
-          let errorMsg = "فشل الرفع!";
-          try {
-            const data = JSON.parse(xhr.responseText);
-            if (data.error) errorMsg += `: ${data.error}`;
-          } catch {
-            if (xhr.responseText) errorMsg += `: ${xhr.responseText}`;
-          }
-          setUploadStatus({ type: "error", message: errorMsg });
-        }
-      };
-
-      const rawUrl = (import.meta.env.VITE_BACKEND_URL || "").trim();
-      const base =
-        rawUrl && rawUrl !== "/"
-          ? rawUrl
-          : "https://bibliaschoolbackend-production.up.railway.app";
-      const targetUrl = new URL(
-        "upload-stream",
-        base.endsWith("/") ? base : base + "/"
-      );
-      targetUrl.search = params.toString();
-
-      const fetchFallback = async () => {
-        try {
-          setUploadProgress(50);
-          const response = await fetch(targetUrl.toString(), {
-            method: "POST",
-            headers: {
-              "Content-Type": file.type || "application/octet-stream",
-            },
-            body: file,
-          });
-
-          setIsUploading(false);
-          if (response.ok) {
-            setUploadProgress(100);
-            setUploadStatus({ type: "success", message: "تم رفع المشروع بنجاح!" });
-            if (fileInput.current) fileInput.current.value = "";
-          } else {
-            const text = await response.text();
-            let errorMsg = "فشل الرفع!";
-            try {
-              const data = JSON.parse(text);
-              if (data.error) errorMsg += `: ${data.error}`;
-            } catch {
-              if (text) errorMsg += `: ${text}`;
-            }
-            setUploadStatus({ type: "error", message: errorMsg });
-          }
-        } catch (err) {
-          setIsUploading(false);
-          setUploadStatus({
-            type: "error",
-            message: err.message || "حدث خطأ أثناء رفع الملف!",
-          });
-        }
-      };
-
-      xhr.onerror = (e) => {
-        console.warn("XHR blocked by browser security, falling back to fetch()...", e);
-        fetchFallback();
-      };
-
-      xhr.open("POST", targetUrl.toString(), true);
-      xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
-      xhr.send(file);
-    } catch (err) {
-      setIsUploading(false);
-      setUploadStatus({ type: "error", message: err.message || "حدث خطأ في الاتصال بالسيرفر!" });
-    }
-  };
 
   const handleDownloadCertPdf = () => {
     // Disabled temporarily until certificates are ready
@@ -406,9 +292,8 @@ const Profile = ({ themeMode, currentUser }) => {
           {/* Overlapping Profile Avatar */}
           <div className="relative -mt-16 sm:-mt-20 mb-4">
             <div
-              className={`w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 flex items-center justify-center text-[#f59e0b] ring-4 ring-[#f59e0b]/40 overflow-hidden shadow-xl ${
-                isDark ? "bg-[#17233d] border-[#131b2e]" : isSepia ? "bg-[#e5d8bf] border-[#fbf7eb]" : "bg-slate-100 border-white"
-              }`}
+              className={`w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 flex items-center justify-center text-[#f59e0b] ring-4 ring-[#f59e0b]/40 overflow-hidden shadow-xl ${isDark ? "bg-[#17233d] border-[#131b2e]" : isSepia ? "bg-[#e5d8bf] border-[#fbf7eb]" : "bg-slate-100 border-white"
+                }`}
             >
               {currentUser?.photoURL ? (
                 <img
@@ -424,11 +309,6 @@ const Profile = ({ themeMode, currentUser }) => {
                 </svg>
               )}
             </div>
-            <span className={`absolute bottom-1 start-2 bg-emerald-500 text-slate-950 text-[11px] font-extrabold px-2 py-0.5 rounded-full border-2 flex items-center gap-1 shadow ${
-              isDark ? "border-[#131b2e]" : isSepia ? "border-[#fbf7eb]" : "border-white"
-            }`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-950"></span> نشط
-            </span>
           </div>
 
           {/* Student Name & Academic Details with Inline Name Editor */}
@@ -440,9 +320,8 @@ const Profile = ({ themeMode, currentUser }) => {
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   placeholder="أدخل اسمك..."
-                  className={`px-4 py-1.5 rounded-xl border text-lg font-bold text-center focus:outline-none focus:ring-2 focus:ring-amber-400 ${
-                    isDark ? "bg-[#0b1326] border-amber-500/40 text-white" : isSepia ? "bg-[#f2ead6] border-amber-600/40 text-[#342415]" : "bg-slate-50 border-amber-400 text-slate-900"
-                  }`}
+                  className={`px-4 py-1.5 rounded-xl border text-lg font-bold text-center focus:outline-none focus:ring-2 focus:ring-amber-400 ${isDark ? "bg-[#0b1326] border-amber-500/40 text-white" : isSepia ? "bg-[#f2ead6] border-amber-600/40 text-[#342415]" : "bg-slate-50 border-amber-400 text-slate-900"
+                    }`}
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleSaveName();
@@ -472,7 +351,6 @@ const Profile = ({ themeMode, currentUser }) => {
                 <h1 className={`text-2xl sm:text-3xl font-black ${textPrimary} tracking-wide`}>
                   {studentName}
                 </h1>
-                <span className="text-amber-500 font-semibold text-lg">(طالب معتمد)</span>
                 <button
                   onClick={handleStartEditName}
                   className="opacity-70 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-amber-500/20 text-amber-400 transition-all"
@@ -499,93 +377,110 @@ const Profile = ({ themeMode, currentUser }) => {
           {/* Section Divider */}
           <div className={`w-full max-w-4xl my-7 border-t ${borderDivider}`}></div>
 
-          {/* Project Submission Box */}
-          <div className={`w-full max-w-2xl rounded-2xl p-5 sm:p-6 text-center sm:text-right flex flex-col sm:flex-row items-center justify-between gap-5 border shadow-inner ${subBoxBg}`}>
-            <div className="flex-1">
-              <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                <span className={`w-2.5 h-2.5 rounded-full ${isProjectLocked ? "bg-slate-500" : "bg-amber-400"}`}></span>
-                <h2 className={`text-base sm:text-lg font-bold ${textPrimary}`}>مشروع التخرج السنوي</h2>
-                {isProjectLocked && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                    <Lock size={12} /> مغلق حالياً
-                  </span>
+          {/* Project Submission Boxes (Video on Right, PDF on Left) */}
+          <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Box 1: Video Submission (Right in RTL) */}
+            <div className={`rounded-2xl p-5 sm:p-6 text-center sm:text-right flex flex-col sm:flex-row items-center justify-between gap-4 border shadow-inner ${subBoxBg}`}>
+              <div className="flex-1">
+                <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                  <span className={`w-2.5 h-2.5 rounded-full ${isProjectLocked ? "bg-slate-500" : "bg-amber-400"}`}></span>
+                  <h2 className={`text-base sm:text-lg font-bold ${textPrimary}`}>مشروع التخرج</h2>
+                  {isProjectLocked && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                      <Lock size={12} /> مغلق حالياً
+                    </span>
+                  )}
+                </div>
+                <p className={`text-xs sm:text-sm leading-relaxed ${textMuted}`}>
+                  {isProjectLocked
+                    ? "باب تسليم المشروعات مغلق حالياً. سيتم إتاحة تسليم المشروعات للطلاب مع اقتراب موعد التقييم النهائي."
+                    : (
+                      <>
+                        <span>ارفع فيديو مشروع التخرج هنا</span>
+                        <span className="block text-[11px] font-mono font-medium text-amber-500/90 mt-1" dir="ltr">
+                          videos only
+                        </span>
+                      </>
+                    )
+                  }
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center sm:items-end gap-2 shrink-0">
+                {isProjectLocked ? (
+                  <div
+                    className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs cursor-not-allowed select-none shadow-sm ${isDark ? "bg-[#18233d] border-slate-700/60 text-slate-400" : isSepia ? "bg-[#e8dec7] border-[#d8caa9] text-[#705e4a]" : "bg-slate-100 border-slate-300 text-slate-500"
+                      }`}
+                    title="باب تسليم المشروعات مغلق حالياً"
+                  >
+                    <Lock size={16} className="text-amber-500" />
+                    <span>التسليم غير متاح</span>
+                  </div>
+                ) : (
+                  <a
+                    href={GRADUATION_PROJECT_FORM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#d97706] via-[#f59e0b] to-[#fbbf24] hover:from-[#b45309] hover:to-[#f59e0b] text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/25 transition-all transform hover:scale-[1.02]"
+                  >
+                    <ExternalLink size={16} className="text-slate-950" />
+                    <span>ارفع هنا !</span>
+                  </a>
                 )}
               </div>
-              <p className={`text-xs sm:text-sm leading-relaxed ${textMuted}`}>
-                {isProjectLocked
-                  ? "باب تسليم المشروعات مغلق حالياً. سيتم إتاحة رفع الملفات للطلاب مع اقتراب موعد التقييم النهائي."
-                  : "ارفع مشروع التخرج للفصل الحالي. الصيغ المقبولة: PDF, DOCX, ZIP بحد أقصى 50MB."
-                }
-              </p>
             </div>
 
-            <div className="flex flex-col items-center sm:items-end gap-2 shrink-0">
-              {isProjectLocked ? (
-                <div
-                  className={`inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border font-bold text-xs cursor-not-allowed select-none shadow-sm ${
-                    isDark ? "bg-[#18233d] border-slate-700/60 text-slate-400" : isSepia ? "bg-[#e8dec7] border-[#d8caa9] text-[#705e4a]" : "bg-slate-100 border-slate-300 text-slate-500"
-                  }`}
-                  title="باب رفع المشروعات مغلق حالياً"
-                >
-                  <Lock size={16} className="text-amber-500" />
-                  <span>التسليم غير متاح الآن</span>
+            {/* Box 2: PDF Submission (Left in RTL) */}
+            <div className={`rounded-2xl p-5 sm:p-6 text-center sm:text-right flex flex-col sm:flex-row items-center justify-between gap-4 border shadow-inner ${subBoxBg}`}>
+              <div className="flex-1">
+                <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                  <span className={`w-2.5 h-2.5 rounded-full ${isPdfLocked ? "bg-slate-500" : "bg-amber-400"}`}></span>
+                  <h2 className={`text-base sm:text-lg font-bold ${textPrimary}`}>ملفات اخري </h2>
+                  {isPdfLocked && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                      <Lock size={12} /> مغلق حالياً
+                    </span>
+                  )}
                 </div>
-              ) : (
-                <>
-                  <button
-                    onClick={openFilePicker}
-                    disabled={isUploading}
-                    className="cursor-pointer inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl bg-gradient-to-r from-[#d97706] via-[#f59e0b] to-[#fbbf24] hover:from-[#b45309] hover:to-[#f59e0b] text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/25 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
-                    type="button"
+                <p className={`text-xs sm:text-sm leading-relaxed ${textMuted}`}>
+                  {isPdfLocked
+                    ? "باب تسليم أبحاث وملفات الـ PDF مغلق حالياً."
+                    : (
+                      <>
+                        <span>ارفع اي ملفات خاصه بمشروع التخرج هنا</span>
+                        <span className="block text-[11px] font-mono font-medium text-amber-500/90 mt-1" dir="ltr">
+                          PDFs,Presentation,Word,Images
+                        </span>
+                      </>
+                    )
+                  }
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center sm:items-end gap-2 shrink-0">
+                {isPdfLocked ? (
+                  <div
+                    className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs cursor-not-allowed select-none shadow-sm ${isDark ? "bg-[#18233d] border-slate-700/60 text-slate-400" : isSepia ? "bg-[#e8dec7] border-[#d8caa9] text-[#705e4a]" : "bg-slate-100 border-slate-300 text-slate-500"
+                      }`}
+                    title="باب تسليم ملفات الـ PDF مغلق حالياً"
                   >
-                    {isUploading ? (
-                      <Loader2 size={18} className="animate-spin text-slate-950" />
-                    ) : (
-                      <Upload size={18} className="text-slate-950" />
-                    )}
-                    <span>{isUploading ? "جاري الرفع..." : "اختر ملف للرفع"}</span>
-                  </button>
-                  <input
-                    type="file"
-                    ref={fileInput}
-                    onChange={uploadFile}
-                    accept=".pdf,.docx,.zip,application/pdf,application/zip"
-                    hidden
-                  />
-                </>
-              )}
+                    <Lock size={16} className="text-amber-500" />
+                    <span>التسليم غير متاح</span>
+                  </div>
+                ) : (
+                  <a
+                    href={PDF_PROJECT_FORM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#d97706] via-[#f59e0b] to-[#fbbf24] hover:from-[#b45309] hover:to-[#f59e0b] text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/25 transition-all transform hover:scale-[1.02]"
+                  >
+                    <ExternalLink size={16} className="text-slate-950" />
+                    <span>ارفع هنا !</span>
+                  </a>
+                )}
+              </div>
             </div>
           </div>
-
-          {/* Progress Bar & Status Alerts */}
-          {(isUploading || uploadStatus) && (
-            <div className="mt-5 w-full max-w-2xl mx-auto">
-              {isUploading && (
-                <div className="mb-2">
-                  <div className="w-full bg-stone-200 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden flex" dir="ltr">
-                    <div
-                      className="bg-amber-500 h-2.5 rounded-full transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-amber-500 font-bold mt-2 text-right">
-                    {uploadProgress}% تم الرفع
-                  </p>
-                </div>
-              )}
-
-              {uploadStatus && !isUploading && (
-                <div className={`flex items-center gap-2 p-3.5 rounded-xl text-sm font-semibold justify-center sm:justify-start ${
-                  uploadStatus.type === 'success'
-                    ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-red-950/40 text-red-400 border border-red-500/30'
-                }`}>
-                  {uploadStatus.type === 'success' ? <CheckCircle size={18} /> : <XCircle size={18} />}
-                  <span>{uploadStatus.message}</span>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </section>
       {/* END: PrimaryProfileCard */}
@@ -605,7 +500,7 @@ const Profile = ({ themeMode, currentUser }) => {
                   <Award size={22} />
                 </div>
                 <div>
-                  <h3 className={`text-base font-bold ${textPrimary}`}>الشهادات الأكاديمية</h3>
+                  <h3 className={`text-base font-bold ${textPrimary}`}>الشهادات </h3>
                   <p className={`text-xs ${textMuted}`}>شهادة إتمام السنة الدراسية</p>
                 </div>
               </div>
@@ -621,7 +516,7 @@ const Profile = ({ themeMode, currentUser }) => {
               </div>
               <div>
                 <h4 className={`text-sm font-bold ${textPrimary} mb-1`}>لا توجد شهادات متاحة حالياً</h4>
-               
+
               </div>
             </div>
           </div>
@@ -684,7 +579,7 @@ const Profile = ({ themeMode, currentUser }) => {
                 </p>
               )}
             </div>
-            
+
           </div>
 
           {/* Open QR in Drive */}
