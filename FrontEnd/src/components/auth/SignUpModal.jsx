@@ -98,8 +98,8 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
     });
 
     try {
-      // 1. Sign up with Supabase Auth (stores metadata in user object)
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      // 1. Sign up with Supabase Auth (stores metadata in user object) with a safety timeout
+      const signUpPromise = supabase.auth.signUp({
         email: trimmedEmail,
         password: formData.password,
         options: {
@@ -115,20 +115,27 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
         }
       });
 
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error('استغرقت الاستجابة وقتاً طويلاً. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.')),
+          15000
+        )
+      );
+
+      const { data, error: signUpError } = await Promise.race([signUpPromise, timeoutPromise]);
+
       if (signUpError) throw signUpError;
 
-      // 2. Backup to Google Script
-      try {
-        await fetch(scriptURL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-          body: params.toString()
-        });
-      } catch (scriptErr) {
+      // 2. Backup to Google Script in background (non-blocking)
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: params.toString()
+      }).catch((scriptErr) => {
         console.warn('Google Script POST error, trying GET fallback:', scriptErr);
         fetch(`${scriptURL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' }).catch(() => {});
-      }
+      });
 
       setIsSuccess(true);
     } catch (err) {
@@ -151,14 +158,15 @@ export default function SignUpModal({ isOpen, onClose, themeMode }) {
                   themeMode === 'sepia' ? 'bg-[#efe9d0] border-[#dfd5b4]' : 'bg-white border-stone-200';
   const overlayBg = themeMode === 'dark' ? 'bg-black/60' : 'bg-black/40';
   const textPrimary = themeMode === 'dark' ? 'text-gray-100' : themeMode === 'sepia' ? 'text-[#433422]' : 'text-stone-900';
-  const inputBg = themeMode === 'dark' ? 'bg-deep-950 border-deep-800 focus:border-gold-500' :
-                  themeMode === 'sepia' ? 'bg-[#f7f3e3] border-[#dfd5b4] focus:border-[#7c684d]' : 'bg-stone-50 border-stone-300 focus:border-stone-500';
+  const inputBg = themeMode === 'dark' ? 'bg-deep-950 border-deep-800 focus:border-gold-500 text-white placeholder-gray-500' :
+                  themeMode === 'sepia' ? 'bg-[#f7f3e3] border-[#dfd5b4] focus:border-[#7c684d] text-[#433422] placeholder-stone-400' : 'bg-stone-50 border-stone-300 focus:border-stone-500 text-stone-900 placeholder-stone-400';
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${overlayBg} backdrop-blur-sm transition-opacity`}>
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${overlayBg} backdrop-blur-sm transition-opacity notranslate`} translate="no">
       <div 
-        className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar p-6 sm:p-8 rounded-2xl border shadow-2xl animate-fade-in ${modalBg} ${textPrimary}`}
+        className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar p-6 sm:p-8 rounded-2xl border shadow-2xl animate-fade-in ${modalBg} ${textPrimary} notranslate`}
         dir="rtl"
+        translate="no"
       >
         <button 
           onClick={onClose}

@@ -80,7 +80,7 @@ function Login({ themeMode }) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pr-10 pl-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-deep-950 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-shadow"
+                className="w-full pr-10 pl-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-deep-950 text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gold-500 transition-shadow"
                 placeholder="example@email.com"
                 dir="ltr"
               />
@@ -100,7 +100,7 @@ function Login({ themeMode }) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pr-10 pl-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-deep-950 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-shadow"
+                className="w-full pr-10 pl-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-deep-950 text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gold-500 transition-shadow"
                 placeholder="••••••••"
                 dir="ltr"
               />
